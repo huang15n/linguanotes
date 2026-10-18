@@ -1,0 +1,19 @@
+<div class="page">
+  <h1>{{ "progress.title" | t }}</h1>
+  @if (summary(); as stats) {
+    <div class="stats-grid">
+      <mat-card appearance="outlined"><mat-card-content><span class="stat-value">{{ stats.courseCount }}</span><span>{{ "progress.courses" | t }}</span></mat-card-content></mat-card>
+      <mat-card appearance="outlined"><mat-card-content><span class="stat-value">{{ stats.noteCount }}</span><span>{{ "progress.notes" | t }}</span></mat-card-content></mat-card>
+      <mat-card appearance="outlined"><mat-card-content><span class="stat-value">{{ stats.vocabularyCount }}</span><span>{{ "progress.vocabulary" | t }}</span></mat-card-content></mat-card>
+      <mat-card appearance="outlined"><mat-card-content><span class="stat-value">{{ stats.attemptCount }}</span><span>{{ "progress.attempts" | t }}</span></mat-card-content></mat-card>
+      <mat-card appearance="outlined"><mat-card-content><span class="stat-value">{{ stats.averageScore }}%</span><span>{{ "progress.average" | t }}</span></mat-card-content></mat-card>
+      <mat-card appearance="outlined"><mat-card-content><span class="stat-value">{{ stats.dueFlashcards }}</span><span>{{ "progress.due" | t }}</span></mat-card-content></mat-card>
+    </div>
+  }
+  <h2>{{ "progress.history" | t }}</h2>
+  @for (point of history(); track point.date) {
+    <div class="history-row"><strong>{{ date(point.date) }}</strong><span>{{ point.attempts }} {{ "progress.attempts" | t }}</span><span>{{ point.averageScore }}%</span></div>
+  } @empty {
+    <p class="muted">{{ "progress.empty" | t }}</p>
+  }
+</div>

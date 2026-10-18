@@ -1,0 +1,61 @@
+<div class="page">
+  <div class="row">
+    <h1 class="grow">{{ "dashboard.title" | t }}</h1>
+    <a mat-flat-button routerLink="/notes/new">
+      <mat-icon>add</mat-icon> {{ "dashboard.newNote" | t }}
+    </a>
+  </div>
+  @if (data(); as d) {
+    <div class="grid">
+      <mat-card appearance="outlined">
+        <mat-card-content class="stat">
+          <mat-icon>description</mat-icon>
+          <div>
+            <div class="n">{{ d.totalNotes }}</div>
+            <div class="muted">{{ "dashboard.notes" | t }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      <mat-card appearance="outlined">
+        <mat-card-content class="stat">
+          <mat-icon>language</mat-icon>
+          <div>
+            <div class="n">{{ d.totalLanguages }}</div>
+            <div class="muted">{{ "dashboard.languages" | t }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      <mat-card appearance="outlined">
+        <mat-card-content class="stat">
+          <mat-icon>star</mat-icon>
+          <div>
+            <div class="n">{{ d.favorites }}</div>
+            <div class="muted">{{ "dashboard.favorites" | t }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+    <h2>{{ "dashboard.byType" | t }}</h2>
+    <mat-chip-set>
+      @for (t of types; track t.value) {
+        <mat-chip>{{ tl(t.value) }} · {{ d.notesByType[t.value] ?? 0 }}</mat-chip>
+      }
+    </mat-chip-set>
+    <h2>{{ "dashboard.recent" | t }}</h2>
+    <mat-card appearance="outlined">
+      <mat-nav-list>
+        @for (n of d.recent; track n.id) {
+          <a mat-list-item [routerLink]="['/notes', n.id]">
+            <span matListItemTitle>{{ n.title }}</span>
+            <span matListItemLine>
+              {{ n.languageName ?? ("common.noLanguage" | t) }} · {{ tl(n.type) }} ·
+              {{ n.updatedAt | date: "medium" : "" : locale.dateLocale() }}
+            </span>
+          </a>
+        } @empty {
+          <p class="muted empty-state">{{ "dashboard.empty" | t }}</p>
+        }
+      </mat-nav-list>
+    </mat-card>
+  }
+</div>

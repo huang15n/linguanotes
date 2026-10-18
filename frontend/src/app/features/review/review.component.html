@@ -1,0 +1,44 @@
+<div class="page">
+  <h1>{{ "review.title" | t }}</h1>
+  <div class="review-layout">
+    <section>
+      <h2>{{ "review.due" | t }} · {{ due().length }}</h2>
+      @if (current(); as card) {
+        <mat-card appearance="outlined" class="review-card">
+          <mat-card-content>
+            <p class="front">{{ card.frontText }}</p>
+            @if (revealed()) {
+              <div class="back">{{ card.backText }}</div>
+              <div class="rating-row">
+                <button mat-button (click)="answer('AGAIN')">{{ "review.again" | t }}</button>
+                <button mat-button (click)="answer('HARD')">{{ "review.hard" | t }}</button>
+                <button mat-flat-button (click)="answer('GOOD')">{{ "review.good" | t }}</button>
+                <button mat-flat-button (click)="answer('EASY')">{{ "review.easy" | t }}</button>
+              </div>
+            } @else {
+              <button mat-flat-button (click)="reveal()">{{ "review.reveal" | t }}</button>
+            }
+          </mat-card-content>
+        </mat-card>
+      } @else {
+        <p class="muted">{{ "review.allDone" | t }}</p>
+      }
+    </section>
+    <section>
+      <mat-card appearance="outlined">
+        <mat-card-content>
+          <h2>{{ "review.create" | t }}</h2>
+          <form [formGroup]="form" (ngSubmit)="create()">
+            <mat-form-field appearance="outline"><mat-label>{{ "review.front" | t }}</mat-label><textarea matInput rows="3" formControlName="frontText"></textarea></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>{{ "review.back" | t }}</mat-label><textarea matInput rows="3" formControlName="backText"></textarea></mat-form-field>
+            <button mat-flat-button type="submit">{{ "review.add" | t }}</button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+      <h2>{{ "review.cards" | t }}</h2>
+      @for (card of cards(); track card.flashcardId) {
+        <div class="card-row"><strong>{{ card.frontText }}</strong><span class="muted">{{ card.backText }}</span></div>
+      } @empty { <p class="muted">{{ "review.noCards" | t }}</p> }
+    </section>
+  </div>
+</div>

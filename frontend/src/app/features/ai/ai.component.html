@@ -1,0 +1,34 @@
+<div class="page">
+  <h1>{{ "ai.title" | t }}</h1>
+  <div class="ai-layout">
+    <mat-card appearance="outlined">
+      <mat-card-content>
+        <form [formGroup]="form" (ngSubmit)="generate()">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ "ai.action" | t }}</mat-label>
+            <mat-select [formControl]="kind">
+              <mat-option value="explain">{{ "ai.explain" | t }}</mat-option>
+              <mat-option value="enrich-note">{{ "ai.enrich" | t }}</mat-option>
+              <mat-option value="generate-exercise">{{ "ai.exercise" | t }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>{{ "ai.content" | t }}</mat-label><textarea matInput rows="9" formControlName="content"></textarea></mat-form-field>
+          <div class="locale-row">
+            <mat-form-field appearance="outline"><mat-label>{{ "ai.language" | t }}</mat-label><input matInput formControlName="targetLanguage" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>{{ "ai.level" | t }}</mat-label><input matInput formControlName="level" placeholder="A1–C2" /></mat-form-field>
+          </div>
+          <button mat-flat-button type="submit" [disabled]="busy()">{{ "ai.generate" | t }}</button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+    <section>
+      @if (result(); as generation) {
+        <h2>{{ "ai.preview" | t }}</h2>
+        <p class="muted">{{ "ai.remaining" | t }}: {{ generation.remainingDailyRequests }}</p>
+        <article class="generated-content">{{ generation.resultContent }}</article>
+      } @else {
+        <p class="muted">{{ "ai.empty" | t }}</p>
+      }
+    </section>
+  </div>
+</div>

@@ -1,0 +1,66 @@
+<div class="page">
+  <div class="row"><h1 class="grow">{{ "vocabulary.title" | t }}</h1></div>
+  <div class="vocabulary-layout">
+    <mat-card appearance="outlined" class="entry-form">
+      <mat-card-content>
+        <h2>{{ (editingId() ? "vocabulary.edit" : "vocabulary.add") | t }}</h2>
+        <form [formGroup]="form" (ngSubmit)="save()">
+          <div class="language-pair">
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "vocabulary.sourceLanguage" | t }}</mat-label>
+              <mat-select formControlName="sourceLanguageId">
+                @for (language of languages(); track language.id) { <mat-option [value]="language.id">{{ language.name }}</mat-option> }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "vocabulary.targetLanguage" | t }}</mat-label>
+              <mat-select formControlName="targetLanguageId">
+                @for (language of languages(); track language.id) { <mat-option [value]="language.id">{{ language.name }}</mat-option> }
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <mat-form-field appearance="outline"><mat-label>{{ "vocabulary.word" | t }}</mat-label><input matInput formControlName="sourceText" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>{{ "vocabulary.translation" | t }}</mat-label><input matInput formControlName="translation" /></mat-form-field>
+          <div class="language-pair">
+            <mat-form-field appearance="outline"><mat-label>IPA</mat-label><input matInput formControlName="ipa" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>{{ "vocabulary.partOfSpeech" | t }}</mat-label><input matInput formControlName="partOfSpeech" /></mat-form-field>
+          </div>
+          <mat-form-field appearance="outline"><mat-label>{{ "vocabulary.examples" | t }}</mat-label><textarea matInput rows="3" formControlName="examples"></textarea></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>{{ "vocabulary.notes" | t }}</mat-label><textarea matInput rows="2" formControlName="personalNotes"></textarea></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>{{ "vocabulary.tags" | t }}</mat-label><input matInput formControlName="tags" /></mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ "vocabulary.difficulty" | t }}</mat-label>
+            <mat-select formControlName="difficulty">
+              <mat-option [value]="1">1</mat-option><mat-option [value]="2">2</mat-option>
+              <mat-option [value]="3">3</mat-option><mat-option [value]="4">4</mat-option><mat-option [value]="5">5</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <div class="row">
+            @if (editingId()) { <button mat-button type="button" (click)="cancelEdit()">{{ "common.cancel" | t }}</button> }
+            <button mat-flat-button type="submit">{{ "common.save" | t }}</button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+    <section class="entry-list">
+      @for (entry of entries(); track entry.id) {
+        <article class="entry-row">
+          <div class="entry-main">
+            <strong>{{ entry.sourceText }}</strong>
+            <span class="muted">{{ entry.sourceLanguageName }} → {{ entry.targetLanguageName }}</span>
+            <span>{{ entry.translation }}</span>
+            @if (entry.ipa || entry.partOfSpeech) { <span class="muted">{{ entry.ipa }} {{ entry.partOfSpeech }}</span> }
+            @for (example of entry.examples; track $index) { <p class="example">{{ example }}</p> }
+            <div class="tags">@for (tag of entry.tags; track tag) { <span>{{ tag }}</span> }</div>
+          </div>
+          <div class="entry-actions">
+            <button mat-icon-button (click)="edit(entry)" [attr.aria-label]="'common.edit' | t"><mat-icon>edit</mat-icon></button>
+            <button mat-icon-button (click)="remove(entry)" [attr.aria-label]="'common.delete' | t"><mat-icon>delete</mat-icon></button>
+          </div>
+        </article>
+      } @empty {
+        <p class="muted">{{ "vocabulary.empty" | t }}</p>
+      }
+    </section>
+  </div>
+</div>

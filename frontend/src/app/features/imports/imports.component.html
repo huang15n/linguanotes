@@ -1,0 +1,51 @@
+<div class="page">
+  <h1>{{ "imports.title" | t }}</h1>
+  <div class="import-layout">
+    <section>
+      <mat-card appearance="outlined">
+        <mat-card-content>
+          <h2>{{ "imports.upload" | t }}</h2>
+          <p class="muted">{{ "imports.formats" | t }}</p>
+          <input class="file-input" type="file" accept=".pdf,.docx,.xlsx,.xls" (change)="chooseFile($event)" />
+          @if (selectedFile(); as file) { <p>{{ file.name }} · {{ (file.size / 1048576).toFixed(1) }} MB</p> }
+          <button mat-flat-button (click)="upload()" [disabled]="!selectedFile()">{{ "imports.analyze" | t }}</button>
+        </mat-card-content>
+      </mat-card>
+      <h2>{{ "imports.history" | t }}</h2>
+      @for (job of jobs(); track job.id) {
+        <button class="job-row" [class.selected]="activeJob()?.id === job.id" (click)="selectJob(job)">
+          <strong>{{ job.originalName }}</strong><span class="muted">{{ job.status }}</span>
+        </button>
+      } @empty { <p class="muted">{{ "imports.empty" | t }}</p> }
+    </section>
+    <section>
+      @if (activeJob(); as job) {
+        <h2>{{ "imports.preview" | t }} · {{ job.originalName }}</h2>
+        @if (job.errorMessage) {
+          <p class="import-error" role="alert">{{ job.errorMessage }}</p>
+        } @else if (job.preview) {
+          <pre class="preview-text">{{ job.preview }}</pre>
+          @if (job.status === "PREVIEW") {
+            <form [formGroup]="form" (ngSubmit)="confirm()" class="confirm-form">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ "imports.existingCourse" | t }}</mat-label>
+                <mat-select formControlName="courseId">
+                  <mat-option [value]="null">{{ "imports.newCourse" | t }}</mat-option>
+                  @for (course of courses(); track course.id) { <mat-option [value]="course.id">{{ course.title }}</mat-option> }
+                </mat-select>
+              </mat-form-field>
+              @if (form.controls.courseId.value === null) {
+                <mat-form-field appearance="outline"><mat-label>{{ "courses.name" | t }}</mat-label><input matInput formControlName="courseTitle" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>{{ "courses.language" | t }}</mat-label>
+                  <mat-select formControlName="languageId">@for (language of languages(); track language.id) { <mat-option [value]="language.id">{{ language.name }}</mat-option> }</mat-select>
+                </mat-form-field>
+              }
+              <mat-form-field appearance="outline"><mat-label>{{ "courses.unitName" | t }}</mat-label><input matInput formControlName="unitTitle" /></mat-form-field>
+              <button mat-flat-button type="submit">{{ "imports.confirm" | t }}</button>
+            </form>
+          } @else { <p class="muted">{{ "imports.confirmed" | t }}</p> }
+        }
+      } @else { <p class="muted">{{ "imports.select" | t }}</p> }
+    </section>
+  </div>
+</div>

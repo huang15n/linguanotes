@@ -1,0 +1,56 @@
+.vocabulary-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.entry-form form,
+.entry-main {
+  display: grid;
+  gap: 8px;
+}
+
+.entry-form mat-card-content {
+  padding: 20px;
+}
+
+.language-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.entry-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.entry-actions {
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.example {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tags span {
+  color: var(--mat-sys-primary);
+}
+
+@media (max-width: 800px) {
+  .vocabulary-layout {
+    grid-template-columns: 1fr;
+  }
+}

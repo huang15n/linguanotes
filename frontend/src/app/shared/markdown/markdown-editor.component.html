@@ -1,0 +1,41 @@
+<div class="bar">
+  <div class="tools" (mousedown)="$event.preventDefault()">
+    <button mat-icon-button type="button" [matTooltip]="'markdown.bold' | t" [disabled]="off()" (click)="wrap('**')"><mat-icon>format_bold</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'markdown.italic' | t" [disabled]="off()" (click)="wrap('*')"><mat-icon>format_italic</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'markdown.strikethrough' | t" [disabled]="off()" (click)="wrap('~~')"><mat-icon>strikethrough_s</mat-icon></button>
+    <span class="sep"></span>
+    <button mat-button type="button" class="h" [matTooltip]="'markdown.heading1' | t" [disabled]="off()" (click)="heading(1)">H1</button>
+    <button mat-button type="button" class="h" [matTooltip]="'markdown.heading2' | t" [disabled]="off()" (click)="heading(2)">H2</button>
+    <button mat-button type="button" class="h" [matTooltip]="'markdown.heading3' | t" [disabled]="off()" (click)="heading(3)">H3</button>
+    <span class="sep"></span>
+    <button mat-icon-button type="button" [matTooltip]="'markdown.bullets' | t" [disabled]="off()" (click)="bullets()"><mat-icon>format_list_bulleted</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'markdown.numbered' | t" [disabled]="off()" (click)="numbered()"><mat-icon>format_list_numbered</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'markdown.quote' | t" [disabled]="off()" (click)="quote()"><mat-icon>format_quote</mat-icon></button>
+    <span class="sep"></span>
+    <button mat-icon-button type="button" [matTooltip]="'markdown.inlineCode' | t" [disabled]="off()" (click)="inlineCode()"><mat-icon>code</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'markdown.codeBlock' | t" [disabled]="off()" (click)="codeBlock()"><mat-icon>integration_instructions</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'markdown.link' | t" [disabled]="off()" (click)="link()"><mat-icon>link</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'markdown.table' | t" [disabled]="off()" (click)="table()"><mat-icon>table_chart</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'markdown.rule' | t" [disabled]="off()" (click)="rule()"><mat-icon>horizontal_rule</mat-icon></button>
+  </div>
+  <mat-button-toggle-group [value]="mode()" (change)="mode.set($event.value)" hideSingleSelectionIndicator [attr.aria-label]="'markdown.mode' | t">
+    <mat-button-toggle value="edit">{{ "markdown.write" | t }}</mat-button-toggle>
+    <mat-button-toggle value="split">{{ "markdown.both" | t }}</mat-button-toggle>
+    <mat-button-toggle value="preview">{{ "markdown.preview" | t }}</mat-button-toggle>
+  </mat-button-toggle-group>
+</div>
+<div class="panes" [class.split]="mode() === 'split'">
+  @if (mode() !== 'preview') {
+    <textarea #ta [value]="value()" [disabled]="disabled()" (input)="onInput($event)" (keydown)="onKey($event)" (blur)="onTouched()"
+      [placeholder]="'markdown.placeholder' | t"></textarea>
+  }
+  @if (mode() !== 'edit') {
+    <div class="preview md">
+      @if (value()) {
+        <div [innerHTML]="value() | markdown"></div>
+      } @else {
+        <span class="empty">{{ "markdown.empty" | t }}</span>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,17 @@
+<h2 mat-dialog-title>{{ data.title }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="col">
+    @for (f of data.fields; track f.key) {
+      <mat-form-field appearance="outline">
+        <mat-label>{{ f.label }}</mat-label>
+        <input matInput [formControlName]="f.key" />
+      </mat-form-field>
+    }
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>{{ "common.cancel" | t }}</button>
+  <button mat-flat-button [disabled]="form.invalid" [mat-dialog-close]="form.value">
+    {{ data.submit ?? ("common.save" | t) }}
+  </button>
+</mat-dialog-actions>

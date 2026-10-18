@@ -1,0 +1,24 @@
+<div class="page">
+  <div class="row">
+    <h1 class="grow">{{ "languages.title" | t }}</h1>
+    <button mat-flat-button (click)="edit()">
+      <mat-icon>add</mat-icon> {{ "languages.new" | t }}
+    </button>
+  </div>
+  <div class="grid">
+    @for (l of list(); track l.id) {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>{{ l.name }}</mat-card-title>
+          <mat-card-subtitle>{{ l.code }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-actions align="end">
+          <button mat-button (click)="edit(l)">{{ "common.edit" | t }}</button>
+          <button mat-button (click)="remove(l)">{{ "common.delete" | t }}</button>
+        </mat-card-actions>
+      </mat-card>
+    } @empty {
+      <p class="muted">{{ "languages.empty" | t }}</p>
+    }
+  </div>
+</div>

@@ -8,8 +8,10 @@ import java.util.*;
 @Entity @Table(name = "notes") @Getter @Setter @NoArgsConstructor
 public class Note {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "owner_id", nullable = false) private UserAccount owner;
     @Column(nullable = false) private String title;
     @Column(columnDefinition = "TEXT") private String content;
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "lesson_id") private Lesson lesson;
     @ManyToOne(fetch = FetchType.EAGER) @JoinColumn(name = "language_id") private Language language;
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) private NoteType type = NoteType.OTHER;
     private String unit;

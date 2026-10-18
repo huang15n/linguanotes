@@ -1,0 +1,82 @@
+<div class="page">
+  <div class="row">
+    <h1 class="grow">{{ "notes.title" | t }}</h1>
+    <a mat-flat-button routerLink="/notes/new">
+      <mat-icon>add</mat-icon> {{ "dashboard.newNote" | t }}
+    </a>
+  </div>
+  <form [formGroup]="form" class="row filters">
+    <mat-form-field appearance="outline" class="grow">
+      <mat-label>{{ "notes.search" | t }}</mat-label>
+      <input matInput formControlName="q" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "notes.language" | t }}</mat-label>
+      <mat-select formControlName="languageId" [canSelectNullableOptions]="true">
+        <mat-option [value]="null">{{ "notes.allLanguages" | t }}</mat-option>
+        @for (l of languages(); track l.id) {
+          <mat-option [value]="l.id">{{ l.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "notes.type" | t }}</mat-label>
+      <mat-select formControlName="type" [canSelectNullableOptions]="true">
+        <mat-option [value]="null">{{ "notes.allTypes" | t }}</mat-option>
+        @for (t of types; track t.value) {
+          <mat-option [value]="t.value">{{ tl(t.value) }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "notes.unit" | t }}</mat-label>
+      <input matInput formControlName="unit" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "notes.tag" | t }}</mat-label>
+      <mat-select formControlName="tag" [canSelectNullableOptions]="true">
+        <mat-option [value]="null">{{ "notes.allTags" | t }}</mat-option>
+        @for (t of tags(); track t) {
+          <mat-option [value]="t">{{ t }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-slide-toggle formControlName="favorite">{{ "common.favorites" | t }}</mat-slide-toggle>
+  </form>
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+  @for (n of notes(); track n.id) {
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>
+          <a [routerLink]="['/notes', n.id]">{{ n.title }}</a>
+        </mat-card-title>
+        <mat-card-subtitle>
+          {{ n.languageName ?? ("common.noLanguage" | t) }} · {{ tl(n.type)
+          }}{{ n.unit ? " · " + n.unit : "" }}
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>{{ excerpt(n.content) }}</p>
+        <mat-chip-set>
+          @for (t of n.tags; track t) {
+            <mat-chip>{{ t }}</mat-chip>
+          }
+        </mat-chip-set>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button mat-icon-button (click)="fav(n)" [attr.aria-label]="'common.favorite' | t">
+          <mat-icon>{{ n.favorite ? "star" : "star_border" }}</mat-icon>
+        </button>
+        <a mat-button [routerLink]="['/notes', n.id, 'edit']">{{ "common.edit" | t }}</a>
+        <button mat-button (click)="remove(n)">{{ "common.delete" | t }}</button>
+      </mat-card-actions>
+    </mat-card>
+  } @empty {
+    @if (!loading()) {
+      <p class="muted">{{ "notes.empty" | t }}</p>
+    }
+  }
+</div>

@@ -2,7 +2,8 @@ package com.linguanotes.service;
 
 import com.linguanotes.dto.Dto.*;
 import com.linguanotes.model.Language;
-import com.linguanotes.repository.*;
+import com.linguanotes.repository.LanguageRepository;
+import com.linguanotes.repository.NoteRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

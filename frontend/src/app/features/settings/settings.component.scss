@@ -1,0 +1,13 @@
+.settings-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.settings-layout mat-card-content,
+.settings-layout form {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}

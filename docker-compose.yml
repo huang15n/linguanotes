@@ -5,13 +5,15 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: linguanotes_app
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local-root-only}
+      MYSQL_USER: ${DB_USER:-linguanotes}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-lingua-local-only}
     ports:
       - "3307:3306"          # 3307 côté Mac pour ne pas entrer en conflit avec un MySQL local
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-local-root-only}"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -25,10 +27,25 @@ services:
         condition: service_healthy
     environment:
       DB_URL: "jdbc:mysql://mysql:3306/linguanotes_app?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
-      DB_USER: root
-      DB_PASSWORD: root
+      DB_USER: ${DB_USER:-linguanotes}
+      DB_PASSWORD: ${DB_PASSWORD:-lingua-local-only}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      FILE_STORAGE_DIR: /app/data/files
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:4200}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_BASE_URL: ${AI_BASE_URL:-https://api.openai.com/v1}
+      AI_MODEL: ${AI_MODEL:-gpt-4o-mini}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-noreply@linguanotes.local}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
     ports:
       - "8080:8080"
+    volumes:
+      - linguanotes_files:/app/data/files
 
   frontend:
     build: ./frontend
@@ -41,3 +58,4 @@ services:
 
 volumes:
   mysql_data:
+  linguanotes_files:

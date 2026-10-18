@@ -1,0 +1,30 @@
+.ai-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 480px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+form {
+  display: grid;
+  gap: 8px;
+}
+
+.locale-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.generated-content {
+  padding: 16px 0;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 800px) {
+  .ai-layout {
+    grid-template-columns: 1fr;
+  }
+}

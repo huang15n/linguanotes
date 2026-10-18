@@ -1,0 +1,36 @@
+<div class="page">
+  <a mat-button routerLink="/notes"><mat-icon>arrow_back</mat-icon> {{ "common.back" | t }}</a>
+  @if (note(); as n) {
+    <div class="row">
+      <h1 class="grow">{{ n.title }}</h1>
+      <button mat-icon-button (click)="fav()" [attr.aria-label]="'common.favorite' | t">
+        <mat-icon>{{ n.favorite ? "star" : "star_border" }}</mat-icon>
+      </button>
+      <a mat-stroked-button [routerLink]="['/notes', n.id, 'edit']">
+        <mat-icon>edit</mat-icon> {{ "common.edit" | t }}
+      </a>
+      <button mat-button (click)="remove()">
+        <mat-icon>delete</mat-icon> {{ "common.delete" | t }}
+      </button>
+    </div>
+    <mat-chip-set>
+      <mat-chip>{{ n.languageName ?? ("common.noLanguage" | t) }}</mat-chip>
+      <mat-chip>{{ tl(n.type) }}</mat-chip>
+      @if (n.unit) {
+        <mat-chip>{{ n.unit }}</mat-chip>
+      }
+      @for (t of n.tags; track t) {
+        <mat-chip>#{{ t }}</mat-chip>
+      }
+    </mat-chip-set>
+    <mat-card appearance="outlined" class="note-content">
+      <mat-card-content>
+        <div class="md" [innerHTML]="n.content | markdown"></div>
+      </mat-card-content>
+    </mat-card>
+    <p class="muted">
+      {{ "note.created" | t }} {{ n.createdAt | date: "medium" : "" : locale.dateLocale() }} ·
+      {{ "note.updated" | t }} {{ n.updatedAt | date: "medium" : "" : locale.dateLocale() }}
+    </p>
+  }
+</div>

@@ -1,0 +1,54 @@
+.import-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 380px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.file-input {
+  display: block;
+  max-width: 100%;
+  margin: 12px 0;
+}
+
+.job-row {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.job-row.selected {
+  color: var(--mat-sys-primary);
+}
+
+.preview-text {
+  max-height: 55vh;
+  overflow: auto;
+  padding: 16px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--mat-sys-surface-container-low);
+  color: var(--mat-sys-on-surface);
+}
+
+.confirm-form {
+  display: grid;
+  gap: 8px;
+}
+
+.import-error {
+  color: var(--mat-sys-error);
+}
+
+@media (max-width: 800px) {
+  .import-layout {
+    grid-template-columns: 1fr;
+  }
+}

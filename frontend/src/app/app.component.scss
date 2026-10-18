@@ -1,0 +1,37 @@
+:host {
+  display: block;
+  height: 100vh;
+}
+
+mat-sidenav-container {
+  height: 100%;
+}
+
+mat-sidenav {
+  width: 240px;
+}
+
+.brand {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 20px 16px;
+  font: var(--mat-sys-title-large);
+}
+
+mat-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--mat-sys-surface-container);
+}
+
+.locale-picker {
+  width: 160px;
+  margin: 12px 8px 0 0;
+}
+
+.account-name {
+  margin: 0 8px;
+  color: var(--mat-sys-on-surface-variant);
+}

@@ -1,0 +1,53 @@
+<main class="auth-page">
+  <mat-card appearance="outlined" class="auth-panel">
+    <mat-card-content>
+      <a class="brand" routerLink="/auth/login">
+        <mat-icon>translate</mat-icon>
+        <span>LinguaNotes</span>
+      </a>
+      <h1>{{ (mode === "register" ? "auth.signup" : "auth.login") | t }}</h1>
+      <p class="muted">{{ "auth.subtitle" | t }}</p>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        @if (mode === "register") {
+          <mat-form-field appearance="outline">
+            <mat-label>{{ "auth.name" | t }}</mat-label>
+            <input matInput formControlName="name" autocomplete="name" />
+            @if (form.controls.name.hasError("required")) {
+              <mat-error>{{ "auth.nameRequired" | t }}</mat-error>
+            }
+          </mat-form-field>
+        }
+        <mat-form-field appearance="outline">
+          <mat-label>{{ "auth.email" | t }}</mat-label>
+          <input matInput type="email" formControlName="email" autocomplete="email" />
+          @if (form.controls.email.hasError("required")) {
+            <mat-error>{{ "auth.emailRequired" | t }}</mat-error>
+          } @else if (form.controls.email.hasError("email")) {
+            <mat-error>{{ "auth.emailInvalid" | t }}</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ "auth.password" | t }}</mat-label>
+          <input matInput type="password" formControlName="password" [autocomplete]="mode === 'register' ? 'new-password' : 'current-password'" />
+          @if (form.controls.password.hasError("minlength")) {
+            <mat-error>{{ "auth.passwordLength" | t }}</mat-error>
+          } @else if (form.controls.password.hasError("required")) {
+            <mat-error>{{ "auth.passwordRequired" | t }}</mat-error>
+          }
+        </mat-form-field>
+        @if (error()) {
+          <p class="form-error" role="alert">{{ error() }}</p>
+        }
+        <button mat-flat-button type="submit" [disabled]="busy()">
+          {{ (mode === "register" ? "auth.signup" : "auth.login") | t }}
+        </button>
+      </form>
+      @if (mode === "register") {
+        <p class="switch-mode">{{ "auth.haveAccount" | t }} <a routerLink="/auth/login">{{ "auth.login" | t }}</a></p>
+      } @else {
+        <p class="switch-mode"><a routerLink="/auth/reset">{{ "auth.forgot" | t }}</a></p>
+        <p class="switch-mode">{{ "auth.noAccount" | t }} <a routerLink="/auth/register">{{ "auth.signup" | t }}</a></p>
+      }
+    </mat-card-content>
+  </mat-card>
+</main>
