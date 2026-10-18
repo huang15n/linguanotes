@@ -10,7 +10,12 @@
           (click)="select(exercise)"
         >
           <strong>{{ exercise.title }}</strong>
-          <span class="muted">{{ exercise.questions.length }} · {{ exercise.type }}</span>
+          <span class="muted">
+            {{ exercise.languageName ?? ("common.none" | t) }}
+            @if (exercise.level) { · {{ exercise.level }} }
+            · {{ exercise.questions.length }} {{ "exercises.questions" | t }}
+            · {{ exercise.status }}
+          </span>
         </button>
       } @empty {
         <p class="muted">{{ "exercises.empty" | t }}</p>
@@ -28,6 +33,42 @@
               <mat-label>{{ "exercises.instructions" | t }}</mat-label>
               <input matInput formControlName="instructions" />
             </mat-form-field>
+            <div class="meta-row">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ "exercises.language" | t }}</mat-label>
+                <mat-select formControlName="languageId">
+                  <mat-option [value]="null">{{ "common.none" | t }}</mat-option>
+                  @for (language of languages(); track language.id) {
+                    <mat-option [value]="language.id">{{ language.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>{{ "exercises.level" | t }}</mat-label>
+                <mat-select formControlName="level">
+                  <mat-option value="">{{ "common.none" | t }}</mat-option>
+                  @for (level of levels(); track level.code) {
+                    <mat-option [value]="level.code">{{ level.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>{{ "exercises.status" | t }}</mat-label>
+                <mat-select formControlName="status">
+                  <mat-option value="DRAFT">{{ "exercises.status.DRAFT" | t }}</mat-option>
+                  <mat-option value="PUBLISHED">{{ "exercises.status.PUBLISHED" | t }}</mat-option>
+                  <mat-option value="ARCHIVED">{{ "exercises.status.ARCHIVED" | t }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "exercises.grammarTopic" | t }}</mat-label>
+              <input matInput formControlName="grammarTopic" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "exercises.introduction" | t }}</mat-label>
+              <textarea matInput rows="3" formControlName="introduction"></textarea>
+            </mat-form-field>
             <mat-form-field appearance="outline">
               <mat-label>{{ "exercises.type" | t }}</mat-label>
               <mat-select formControlName="type">
@@ -36,6 +77,17 @@
                 <mat-option value="TRANSLATION">{{ "exercises.translation" | t }}</mat-option>
               </mat-select>
             </mat-form-field>
+            <div class="meta-row">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ "exercises.maxAttempts" | t }}</mat-label>
+                <input matInput type="number" min="1" formControlName="maxAttempts" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>{{ "exercises.passThreshold" | t }}</mat-label>
+                <input matInput type="number" min="0" max="100" formControlName="passThreshold" />
+              </mat-form-field>
+              <mat-slide-toggle formControlName="showAnswers">{{ "exercises.showAnswers" | t }}</mat-slide-toggle>
+            </div>
 
             <div formArrayName="questions">
               @for (question of questions.controls; track $index) {
@@ -98,12 +150,30 @@
         <mat-card appearance="outlined" class="quiz-panel">
           <mat-card-content>
             <div class="quiz-heading">
-              <h2>{{ exercise.title }}</h2>
+              <div>
+                <h2>{{ exercise.title }}</h2>
+                <div class="note-meta">
+                  <span class="pill">{{ exercise.languageName ?? ("common.none" | t) }}</span>
+                  @if (exercise.level) { <span class="pill green">{{ exercise.level }}</span> }
+                  <span class="pill amber">{{ "exercises.status." + exercise.status | t }}</span>
+                  @if (exercise.grammarTopic) { <span>{{ exercise.grammarTopic }}</span> }
+                  <span>{{ exercise.ownerName }}</span>
+                </div>
+              </div>
               <button mat-icon-button type="button" (click)="removeExercise()" [attr.aria-label]="'exercises.delete' | t">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
             <p>{{ exercise.instructions }}</p>
+            @if (exercise.introduction) {
+              <div class="introduction">{{ exercise.introduction }}</div>
+            }
+            <div class="row preview-row">
+              <mat-slide-toggle [checked]="preview()" (change)="preview.set($event.checked)">
+                {{ "exercises.previewMode" | t }}
+              </mat-slide-toggle>
+              <span class="muted">{{ "exercises.previewHint" | t }}</span>
+            </div>
             <form (ngSubmit)="submit()">
               @for (question of exercise.questions; track $index) {
                 <h3>{{ $index + 1 }}. {{ question.prompt }}</h3>
@@ -128,7 +198,12 @@
 
             @if (result(); as attempt) {
               <div class="result" role="status">
-                <strong>{{ "exercises.score" | t }}: {{ attempt.score }}%</strong>
+                <div class="row">
+                  <strong>{{ "exercises.score" | t }}: {{ attempt.score }}%</strong>
+                  <span class="pill" [class.green]="attempt.passed">{{ attempt.passed ? ("exercises.passed" | t) : ("exercises.failed" | t) }}</span>
+                  @if (attempt.preview) { <span class="pill amber">{{ "exercises.previewMode" | t }}</span> }
+                  <span class="muted">{{ "exercises.passThreshold" | t }} : {{ attempt.passThreshold }}%</span>
+                </div>
                 @for (item of attempt.results; track item.index) {
                   <p>
                     {{ item.correct ? ("exercises.correct" | t) : ("exercises.incorrect" | t) }}
@@ -147,6 +222,7 @@
         @for (attempt of history(); track attempt.id) {
           <p class="history-row">
             {{ attempt.attemptedAt | date: "mediumDate" }} · {{ attempt.score }}%
+            @if (attempt.preview) { · {{ "exercises.previewMode" | t }} }
           </p>
         } @empty {
           <p class="muted">{{ "exercises.noHistory" | t }}</p>

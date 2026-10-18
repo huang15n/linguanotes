@@ -1,61 +1,189 @@
 <div class="page">
-  <div class="row">
-    <h1 class="grow">{{ "dashboard.title" | t }}</h1>
-    <a mat-flat-button routerLink="/notes/new">
-      <mat-icon>add</mat-icon> {{ "dashboard.newNote" | t }}
-    </a>
-  </div>
-  @if (data(); as d) {
-    <div class="grid">
-      <mat-card appearance="outlined">
-        <mat-card-content class="stat">
-          <mat-icon>description</mat-icon>
-          <div>
-            <div class="n">{{ d.totalNotes }}</div>
-            <div class="muted">{{ "dashboard.notes" | t }}</div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-      <mat-card appearance="outlined">
-        <mat-card-content class="stat">
-          <mat-icon>language</mat-icon>
-          <div>
-            <div class="n">{{ d.totalLanguages }}</div>
-            <div class="muted">{{ "dashboard.languages" | t }}</div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-      <mat-card appearance="outlined">
-        <mat-card-content class="stat">
-          <mat-icon>star</mat-icon>
-          <div>
-            <div class="n">{{ d.favorites }}</div>
-            <div class="muted">{{ "dashboard.favorites" | t }}</div>
-          </div>
-        </mat-card-content>
-      </mat-card>
+  <section class="hero">
+    <div class="hero-copy">
+      <span class="eyebrow"><mat-icon>auto_awesome</mat-icon>{{ "dashboard.eyebrow" | t }}</span>
+      <h1>{{ "dashboard.heroTitle" | t }}</h1>
+      <p class="subtitle">{{ "dashboard.heroSubtitle" | t }}</p>
+      <div class="hero-actions">
+        <a mat-flat-button routerLink="/notes/new">
+          <mat-icon>add</mat-icon>
+          {{ "dashboard.newNote" | t }}
+        </a>
+        <a mat-stroked-button routerLink="/courses">
+          <mat-icon>explore</mat-icon>
+          {{ "dashboard.explore" | t }}
+        </a>
+      </div>
     </div>
-    <h2>{{ "dashboard.byType" | t }}</h2>
-    <mat-chip-set>
-      @for (t of types; track t.value) {
-        <mat-chip>{{ tl(t.value) }} · {{ d.notesByType[t.value] ?? 0 }}</mat-chip>
+    <div class="hero-orbit" aria-hidden="true">
+      <span class="orbit orbit-one"></span>
+      <span class="orbit orbit-two"></span>
+      <span class="orbit-center"><mat-icon>translate</mat-icon></span>
+    </div>
+  </section>
+
+  @if (loading()) {
+    <div class="skeleton-grid">
+      @for (item of [1, 2, 3, 4]; track item) {
+        <div class="skeleton-card"></div>
       }
-    </mat-chip-set>
-    <h2>{{ "dashboard.recent" | t }}</h2>
-    <mat-card appearance="outlined">
-      <mat-nav-list>
-        @for (n of d.recent; track n.id) {
-          <a mat-list-item [routerLink]="['/notes', n.id]">
-            <span matListItemTitle>{{ n.title }}</span>
-            <span matListItemLine>
-              {{ n.languageName ?? ("common.noLanguage" | t) }} · {{ tl(n.type) }} ·
-              {{ n.updatedAt | date: "medium" : "" : locale.dateLocale() }}
-            </span>
-          </a>
-        } @empty {
-          <p class="muted empty-state">{{ "dashboard.empty" | t }}</p>
+    </div>
+  } @else {
+    @if (data(); as d) {
+    <div class="stat-grid">
+      <a class="stat-card" routerLink="/notes">
+        <span class="stat-icon"><mat-icon>description</mat-icon></span>
+        <span class="stat-value">{{ d.totalNotes }}</span>
+        <span class="stat-label">{{ "dashboard.notes" | t }}</span>
+      </a>
+      <a class="stat-card" routerLink="/languages">
+        <span class="stat-icon"><mat-icon>language</mat-icon></span>
+        <span class="stat-value">{{ d.totalLanguages }}</span>
+        <span class="stat-label">{{ "dashboard.languages" | t }}</span>
+      </a>
+      <a class="stat-card green" routerLink="/vocabulary">
+        <span class="stat-icon"><mat-icon>translate</mat-icon></span>
+        <span class="stat-value">{{ d.vocabularyCount }}</span>
+        <span class="stat-label">{{ "dashboard.vocabulary" | t }}</span>
+      </a>
+      <a class="stat-card amber" routerLink="/review">
+        <span class="stat-icon"><mat-icon>style</mat-icon></span>
+        <span class="stat-value">{{ d.dueFlashcards }}</span>
+        <span class="stat-label">{{ "dashboard.due" | t }}</span>
+      </a>
+    </div>
+
+    <div class="dashboard-columns">
+      <section class="panel">
+        <div class="section-heading">
+          <h2>{{ "dashboard.byType" | t }}</h2>
+          <a mat-button routerLink="/notes">{{ "common.viewAll" | t }}</a>
+        </div>
+        @if (typeRows().length) {
+          <div class="bar-list">
+            @for (row of typeRows(); track row.value) {
+              <div class="bar-row">
+                <span class="bar-label">{{ tl(row.value) }}</span>
+                <span class="bar-track">
+                  <span class="bar-fill" [style.width.%]="(row.count / maxType()) * 100"></span>
+                </span>
+                <span class="bar-count">{{ row.count }}</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="empty-card">
+            <mat-icon>note_add</mat-icon>
+            <p>{{ "dashboard.noTypes" | t }}</p>
+            <a mat-flat-button routerLink="/notes/new">{{ "dashboard.newNote" | t }}</a>
+          </div>
         }
-      </mat-nav-list>
-    </mat-card>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <h2>{{ "dashboard.learning" | t }}</h2>
+        </div>
+        <div class="learning-grid">
+          <div class="learning-item">
+            <mat-icon>quiz</mat-icon>
+            <strong>{{ d.exerciseAttempts }}</strong>
+            <span>{{ "dashboard.attempts" | t }}</span>
+          </div>
+          <div class="learning-item">
+            <mat-icon>verified</mat-icon>
+            <strong>{{ d.averageScore }}%</strong>
+            <span>{{ "dashboard.average" | t }}</span>
+          </div>
+          <div class="learning-item">
+            <mat-icon>star</mat-icon>
+            <strong>{{ d.favorites }}</strong>
+            <span>{{ "dashboard.favorites" | t }}</span>
+          </div>
+        </div>
+        <div class="learning-cta">
+          <p>{{ "dashboard.reviewHint" | t }}</p>
+          <a mat-flat-button routerLink="/review">
+            <mat-icon>play_arrow</mat-icon>
+            {{ "dashboard.startReview" | t }}
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <div class="section-heading">
+      <h2>{{ "dashboard.recent" | t }}</h2>
+      <a mat-button routerLink="/notes">{{ "dashboard.viewAllNotes" | t }}</a>
+    </div>
+    @if (d.recent.length) {
+      <div class="note-card-grid">
+        @for (n of d.recent; track n.id) {
+          <a class="note-card" [routerLink]="['/notes', n.id]">
+            <div class="note-meta">
+              <span class="pill">{{ tl(n.type) }}</span>
+              @if (n.languageName) {
+                <span>{{ n.languageName }}</span>
+              }
+              @if (n.level) {
+                <span>· {{ n.level }}</span>
+              }
+            </div>
+            <h3>{{ n.title }}</h3>
+            <p class="note-snippet">{{ excerpt(n) }}</p>
+            <div class="note-meta">
+              <span>{{ n.updatedAt | date: "mediumDate" : "" : locale.dateLocale() }}</span>
+              <span>·</span>
+              <span>{{ n.authorName }}</span>
+            </div>
+          </a>
+        }
+      </div>
+    } @else {
+      <div class="empty-card">
+        <mat-icon>edit_note</mat-icon>
+        <p>{{ "dashboard.empty" | t }}</p>
+        <a mat-flat-button routerLink="/notes/new">{{ "dashboard.newNote" | t }}</a>
+      </div>
+    }
+
+    <div class="section-heading">
+      <h2>{{ "dashboard.quickActions" | t }}</h2>
+    </div>
+    <div class="action-grid">
+      <a class="action-card" routerLink="/notes/new">
+        <mat-icon>edit_note</mat-icon>
+        <div>
+          <strong>{{ "dashboard.quickNewNote" | t }}</strong>
+          <span>{{ "dashboard.quickNewNoteHint" | t }}</span>
+        </div>
+      </a>
+      <a class="action-card" routerLink="/notes">
+        <mat-icon>library_books</mat-icon>
+        <div>
+          <strong>{{ "dashboard.quickNotes" | t }}</strong>
+          <span>{{ "dashboard.quickNotesHint" | t }}</span>
+        </div>
+      </a>
+      <a class="action-card" routerLink="/review">
+        <mat-icon>style</mat-icon>
+        <div>
+          <strong>{{ "dashboard.quickReview" | t }}</strong>
+          <span>{{ "dashboard.quickReviewHint" | t }}</span>
+        </div>
+      </a>
+      <a class="action-card" routerLink="/languages">
+        <mat-icon>language</mat-icon>
+        <div>
+          <strong>{{ "dashboard.quickLanguages" | t }}</strong>
+          <span>{{ "dashboard.quickLanguagesHint" | t }}</span>
+        </div>
+      </a>
+    </div>
+    } @else {
+      <div class="empty-card">
+        <mat-icon>cloud_off</mat-icon>
+        <p>{{ "dashboard.loadError" | t }}</p>
+      </div>
+    }
   }
 </div>

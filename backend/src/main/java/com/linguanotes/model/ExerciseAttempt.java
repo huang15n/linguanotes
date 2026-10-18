@@ -34,6 +34,9 @@ public class ExerciseAttempt {
     @Column(name = "attempted_at", nullable = false)
     private LocalDateTime attemptedAt;
 
+    @Column(nullable = false)
+    private boolean preview;
+
     @PrePersist
     void onCreate() {
         attemptedAt = LocalDateTime.now();

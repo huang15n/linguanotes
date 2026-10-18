@@ -1,4 +1,4 @@
-import { Component, inject, signal } from "@angular/core";
+import { Component, computed, inject, signal } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import { BreakpointObserver } from "@angular/cdk/layout";
 import { RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
@@ -39,10 +39,22 @@ export class AppComponent {
   open = signal(false);
   mobile = toSignal(
     inject(BreakpointObserver)
-      .observe("(max-width: 800px)")
-      .pipe(map((r) => r.matches)),
+      .observe("(max-width: 900px)")
+      .pipe(map((result) => result.matches)),
     { initialValue: false },
   );
+  initials = computed(() => {
+    const name = this.auth.account()?.name?.trim() ?? "";
+    return name
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join("");
+  });
+
+  roleLabel(role: string) {
+    return this.locale.translate(`role.${role}`);
+  }
 
   logout() {
     this.auth.logout().subscribe();

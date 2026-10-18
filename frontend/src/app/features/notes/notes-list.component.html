@@ -37,8 +37,8 @@
       <mat-label>{{ "notes.tag" | t }}</mat-label>
       <mat-select formControlName="tag" [canSelectNullableOptions]="true">
         <mat-option [value]="null">{{ "notes.allTags" | t }}</mat-option>
-        @for (t of tags(); track t) {
-          <mat-option [value]="t">{{ t }}</mat-option>
+        @for (t of tags(); track t.id) {
+          <mat-option [value]="t.name">{{ t.name }}</mat-option>
         }
       </mat-select>
     </mat-form-field>
@@ -54,17 +54,23 @@
           <a [routerLink]="['/notes', n.id]">{{ n.title }}</a>
         </mat-card-title>
         <mat-card-subtitle>
-          {{ n.languageName ?? ("common.noLanguage" | t) }} · {{ tl(n.type)
-          }}{{ n.unit ? " · " + n.unit : "" }}
+          {{ n.authorName }} · {{ n.languageName ?? ("common.noLanguage" | t) }} · {{ tl(n.type) }}
+          @if (n.level) { · {{ n.level }} }
+          {{ n.unit ? " · " + n.unit : "" }}
         </mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <p>{{ excerpt(n.content) }}</p>
         <mat-chip-set>
+          <mat-chip>{{ n.visibility }}</mat-chip>
           @for (t of n.tags; track t) {
             <mat-chip>{{ t }}</mat-chip>
           }
         </mat-chip-set>
+        <div class="note-meta">
+          <span><mat-icon>favorite</mat-icon> {{ n.likeCount }}</span>
+          <span><mat-icon>comment</mat-icon> {{ n.commentCount }}</span>
+        </div>
       </mat-card-content>
       <mat-card-actions align="end">
         <button mat-icon-button (click)="fav(n)" [attr.aria-label]="'common.favorite' | t">

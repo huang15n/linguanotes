@@ -2,6 +2,7 @@ import {
   Component,
   ElementRef,
   forwardRef,
+  inject,
   signal,
   viewChild,
 } from "@angular/core";
@@ -11,6 +12,7 @@ import { MatButtonToggleModule } from "@angular/material/button-toggle";
 import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from "@angular/material/tooltip";
 import { TranslatePipe } from "../../core/services/locale.service";
+import { ApiService } from "../../core/services/api.service";
 import { MarkdownPipe } from "./markdown.pipe";
 
 type Mode = "edit" | "split" | "preview";
@@ -36,10 +38,13 @@ type Mode = "edit" | "split" | "preview";
   templateUrl: "./markdown-editor.component.html",
 })
 export class MarkdownEditorComponent implements ControlValueAccessor {
+  private api = inject(ApiService);
   ta = viewChild<ElementRef<HTMLTextAreaElement>>("ta");
+  imageInput = viewChild<ElementRef<HTMLInputElement>>("imageInput");
   value = signal("");
   mode = signal<Mode>("split");
   disabled = signal(false);
+  imageUploading = signal(false);
   off = () => this.mode() === "preview" || this.disabled();
   private onChange: (v: string) => void = () => {};
   onTouched: () => void = () => {};
@@ -168,5 +173,28 @@ export class MarkdownEditorComponent implements ControlValueAccessor {
     this.insert(
       "\n| Mot | Traduction | Exemple |\n| --- | --- | --- |\n|  |  |  |\n",
     );
+  }
+
+  openImagePicker() {
+    this.imageInput()?.nativeElement.click();
+  }
+
+  uploadImage(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.item(0);
+    if (!file) return;
+    this.imageUploading.set(true);
+    this.api.uploadFile(file).subscribe({
+      next: (stored) => {
+        const alt = file.name.replace(/\.[^.]+$/, "");
+        this.insert(`\n![${alt}](/api/files/${stored.id})\n`);
+        input.value = "";
+        this.imageUploading.set(false);
+      },
+      error: () => {
+        input.value = "";
+        this.imageUploading.set(false);
+      },
+    });
   }
 }

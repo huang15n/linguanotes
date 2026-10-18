@@ -13,16 +13,22 @@ import {
   ImportJob,
   Language,
   Lesson,
+  LessonSection,
   LoginRequest,
   Note,
+  NoteComment,
   NoteFilters,
+  NoteLikeResult,
   NoteRequest,
   ProgressPoint,
   ProgressSummary,
   RegisterRequest,
+  ReviewMode,
   ReviewRating,
   ReviewResult,
+  ReviewSession,
   StoredFile,
+  Tag,
   Unit,
   VocabularyEntry,
 } from "../models";
@@ -128,6 +134,49 @@ export class ApiService {
       `${this.b}/units/${unitId}/lessons/${lessonId}`,
     );
   }
+  lessonSections(lessonId: number) {
+    return this.http.get<LessonSection[]>(
+      `${this.b}/lessons/${lessonId}/sections`,
+    );
+  }
+  createLessonSection(
+    lessonId: number,
+    body: {
+      type: LessonSection["type"];
+      title: string;
+      content: string | null;
+      contentJson: string | null;
+      position: number;
+      visible: boolean;
+    },
+  ) {
+    return this.http.post<LessonSection>(
+      `${this.b}/lessons/${lessonId}/sections`,
+      body,
+    );
+  }
+  updateLessonSection(
+    lessonId: number,
+    sectionId: number,
+    body: {
+      type: LessonSection["type"];
+      title: string;
+      content: string | null;
+      contentJson: string | null;
+      position: number;
+      visible: boolean;
+    },
+  ) {
+    return this.http.put<LessonSection>(
+      `${this.b}/lessons/${lessonId}/sections/${sectionId}`,
+      body,
+    );
+  }
+  deleteLessonSection(lessonId: number, sectionId: number) {
+    return this.http.delete<void>(
+      `${this.b}/lessons/${lessonId}/sections/${sectionId}`,
+    );
+  }
   vocabulary() {
     return this.http.get<VocabularyEntry[]>(`${this.b}/vocabulary`);
   }
@@ -152,10 +201,10 @@ export class ApiService {
   deleteExercise(id: number) {
     return this.http.delete<void>(`${this.b}/exercises/${id}`);
   }
-  submitExercise(id: number, answers: string[]) {
+  submitExercise(id: number, answers: string[], preview = false) {
     return this.http.post<ExerciseResult>(
       `${this.b}/exercises/${id}/attempts`,
-      { answers },
+      { answers, preview },
     );
   }
   exerciseAttempts(id: number) {
@@ -182,6 +231,16 @@ export class ApiService {
     return this.http.post<ReviewResult>(`${this.b}/review/${id}/answer`, {
       rating,
     });
+  }
+  reviewSessions() {
+    return this.http.get<ReviewSession[]>(`${this.b}/review/sessions`);
+  }
+  recordReviewSession(body: {
+    languageId: number | null;
+    mode: ReviewMode;
+    items: { vocabularyEntryId: number; correct: boolean }[];
+  }) {
+    return this.http.post<ReviewSession>(`${this.b}/review/sessions`, body);
   }
   progressSummary() {
     return this.http.get<ProgressSummary>(`${this.b}/progress/summary`);
@@ -273,7 +332,16 @@ export class ApiService {
     return this.http.get<Dashboard>(`${this.b}/dashboard`);
   }
   tags() {
-    return this.http.get<string[]>(`${this.b}/tags`);
+    return this.http.get<Tag[]>(`${this.b}/tags`);
+  }
+  createTag(name: string) {
+    return this.http.post<Tag>(`${this.b}/tags`, { name });
+  }
+  updateTag(id: number, name: string) {
+    return this.http.put<Tag>(`${this.b}/tags/${id}`, { name });
+  }
+  deleteTag(id: number) {
+    return this.http.delete<void>(`${this.b}/tags/${id}`);
   }
   languages() {
     return this.http.get<Language[]>(`${this.b}/languages`);
@@ -303,10 +371,41 @@ export class ApiService {
   updateNote(id: string | number, body: NoteRequest) {
     return this.http.put<Note>(`${this.b}/notes/${id}`, body);
   }
+  autosaveNote(
+    id: string | number,
+    body: { title: string; content: string; version: number },
+  ) {
+    return this.http.put<Note>(`${this.b}/notes/${id}/autosave`, body);
+  }
   toggleFavorite(id: number) {
     return this.http.patch<Note>(`${this.b}/notes/${id}/favorite`, {});
   }
   deleteNote(id: number) {
     return this.http.delete<void>(`${this.b}/notes/${id}`);
+  }
+  likeNote(id: number) {
+    return this.http.post<NoteLikeResult>(`${this.b}/notes/${id}/like`, {});
+  }
+  unlikeNote(id: number) {
+    return this.http.delete<NoteLikeResult>(`${this.b}/notes/${id}/like`);
+  }
+  noteComments(id: number) {
+    return this.http.get<NoteComment[]>(`${this.b}/notes/${id}/comments`);
+  }
+  addNoteComment(id: number, content: string) {
+    return this.http.post<NoteComment>(`${this.b}/notes/${id}/comments`, {
+      content,
+    });
+  }
+  updateNoteComment(noteId: number, commentId: number, content: string) {
+    return this.http.put<NoteComment>(
+      `${this.b}/notes/${noteId}/comments/${commentId}`,
+      { content },
+    );
+  }
+  deleteNoteComment(noteId: number, commentId: number) {
+    return this.http.delete<void>(
+      `${this.b}/notes/${noteId}/comments/${commentId}`,
+    );
   }
 }

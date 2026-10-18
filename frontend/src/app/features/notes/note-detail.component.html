@@ -1,36 +1,118 @@
 <div class="page">
-  <a mat-button routerLink="/notes"><mat-icon>arrow_back</mat-icon> {{ "common.back" | t }}</a>
+  <a mat-button routerLink="/notes" class="back-link">
+    <mat-icon>arrow_back</mat-icon>
+    {{ "common.back" | t }}
+  </a>
   @if (note(); as n) {
-    <div class="row">
-      <h1 class="grow">{{ n.title }}</h1>
-      <button mat-icon-button (click)="fav()" [attr.aria-label]="'common.favorite' | t">
-        <mat-icon>{{ n.favorite ? "star" : "star_border" }}</mat-icon>
-      </button>
-      <a mat-stroked-button [routerLink]="['/notes', n.id, 'edit']">
-        <mat-icon>edit</mat-icon> {{ "common.edit" | t }}
-      </a>
-      <button mat-button (click)="remove()">
-        <mat-icon>delete</mat-icon> {{ "common.delete" | t }}
-      </button>
+    <div class="page-header">
+      <div class="note-heading">
+        <span class="eyebrow"><mat-icon>description</mat-icon>{{ tl(n.type) }}</span>
+        <h1>{{ n.title }}</h1>
+        <p class="subtitle">
+          {{ "note.by" | t }} <strong>{{ n.authorName }}</strong>
+          · {{ n.updatedAt | date: "medium" : "" : locale.dateLocale() }}
+        </p>
+      </div>
+      <div class="note-actions">
+        <button mat-icon-button type="button" (click)="toggleLike()" [attr.aria-label]="(n.likedByMe ? 'note.unlike' : 'note.like') | t">
+          <mat-icon [class.liked]="n.likedByMe">{{ n.likedByMe ? "favorite" : "favorite_border" }}</mat-icon>
+        </button>
+        <span class="like-count">{{ n.likeCount }}</span>
+        @if (isOwner()) {
+          <button mat-icon-button type="button" (click)="fav()" [attr.aria-label]="'common.favorite' | t">
+            <mat-icon>{{ n.favorite ? "star" : "star_border" }}</mat-icon>
+          </button>
+          <a mat-stroked-button [routerLink]="['/notes', n.id, 'edit']">
+            <mat-icon>edit</mat-icon>
+            {{ "common.edit" | t }}
+          </a>
+          <button mat-icon-button type="button" (click)="remove()" [attr.aria-label]="'common.delete' | t">
+            <mat-icon>delete</mat-icon>
+          </button>
+        }
+      </div>
     </div>
-    <mat-chip-set>
-      <mat-chip>{{ n.languageName ?? ("common.noLanguage" | t) }}</mat-chip>
-      <mat-chip>{{ tl(n.type) }}</mat-chip>
-      @if (n.unit) {
-        <mat-chip>{{ n.unit }}</mat-chip>
+
+    <div class="chip-row note-chips">
+      <span class="pill">{{ n.languageName ?? ("common.noLanguage" | t) }}</span>
+      @if (n.level) {
+        <span class="pill green">{{ n.level }}</span>
       }
-      @for (t of n.tags; track t) {
-        <mat-chip>#{{ t }}</mat-chip>
+      <span class="pill amber">{{ visibilityLabel(n.visibility) }}</span>
+      @for (tag of n.tags; track tag) {
+        <span class="pill">#{{ tag }}</span>
       }
-    </mat-chip-set>
+    </div>
+
     <mat-card appearance="outlined" class="note-content">
       <mat-card-content>
         <div class="md" [innerHTML]="n.content | markdown"></div>
       </mat-card-content>
     </mat-card>
-    <p class="muted">
-      {{ "note.created" | t }} {{ n.createdAt | date: "medium" : "" : locale.dateLocale() }} ·
-      {{ "note.updated" | t }} {{ n.updatedAt | date: "medium" : "" : locale.dateLocale() }}
+
+    <p class="muted note-dates">
+      {{ "note.created" | t }} {{ n.createdAt | date: "medium" : "" : locale.dateLocale() }}
+      · {{ "note.updated" | t }} {{ n.updatedAt | date: "medium" : "" : locale.dateLocale() }}
+      @if (n.lastSavedAt) {
+        · {{ "note.lastSaved" | t }} {{ n.lastSavedAt | date: "short" : "" : locale.dateLocale() }}
+      }
     </p>
+
+    <section class="comments">
+      <div class="section-heading">
+        <h2><mat-icon>forum</mat-icon> {{ "note.comments" | t }} ({{ n.commentCount }})</h2>
+      </div>
+
+      <form class="comment-form" (ngSubmit)="addComment()">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ "note.commentPlaceholder" | t }}</mat-label>
+          <textarea matInput rows="3" [formControl]="commentControl"></textarea>
+          @if (commentControl.hasError("required")) {
+            <mat-error>{{ "common.required" | t }}</mat-error>
+          }
+        </mat-form-field>
+        <button mat-flat-button type="submit" [disabled]="commentControl.invalid">
+          <mat-icon>send</mat-icon>
+          {{ "note.addComment" | t }}
+        </button>
+      </form>
+
+      <div class="comment-list">
+        @for (comment of comments(); track comment.id) {
+          <article class="comment">
+            <span class="comment-avatar">{{ comment.authorName.charAt(0).toUpperCase() }}</span>
+            <div class="comment-body">
+              <div class="comment-head">
+                <strong>{{ comment.authorName }}</strong>
+                <span class="muted">{{ comment.createdAt | date: "short" : "" : locale.dateLocale() }}</span>
+              </div>
+              @if (editingComment()?.id === comment.id) {
+                <textarea class="comment-edit" [value]="editText()" (input)="editText.set($any($event.target).value)"></textarea>
+                <div class="row">
+                  <button mat-flat-button type="button" (click)="saveEdit(comment)">{{ "common.save" | t }}</button>
+                  <button mat-button type="button" (click)="cancelEdit()">{{ "common.cancel" | t }}</button>
+                </div>
+              } @else {
+                <p class="comment-text">{{ comment.content }}</p>
+                @if (comment.owned) {
+                  <div class="row comment-actions">
+                    <button mat-button type="button" (click)="startEdit(comment)">{{ "common.edit" | t }}</button>
+                    <button mat-button type="button" (click)="removeComment(comment)">{{ "common.delete" | t }}</button>
+                  </div>
+                }
+              }
+            </div>
+          </article>
+        } @empty {
+          <p class="muted">{{ "note.noComments" | t }}</p>
+        }
+      </div>
+    </section>
+  } @else {
+    <div class="empty-card">
+      <mat-icon>description</mat-icon>
+      <p>{{ "note.notFound" | t }}</p>
+      <a mat-flat-button routerLink="/notes">{{ "common.back" | t }}</a>
+    </div>
   }
 </div>

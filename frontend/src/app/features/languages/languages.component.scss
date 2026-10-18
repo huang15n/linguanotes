@@ -1,0 +1,29 @@
+.language-card {
+  height: 100%;
+}
+
+.language-badge {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-right: 12px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--ln-primary), var(--ln-accent));
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.language-card mat-card-header {
+  align-items: center;
+}
+
+.language-card mat-card-content {
+  padding-top: 8px;
+}
+
+.language-card .chip-row {
+  min-height: 28px;
+}

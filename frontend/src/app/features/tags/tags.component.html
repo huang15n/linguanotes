@@ -1,0 +1,36 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <span class="eyebrow"><mat-icon>sell</mat-icon>{{ "tags.eyebrow" | t }}</span>
+      <h1>{{ "tags.title" | t }}</h1>
+      <p class="subtitle">{{ "tags.subtitle" | t }}</p>
+    </div>
+    <button mat-flat-button type="button" (click)="edit()">
+      <mat-icon>add</mat-icon>
+      {{ "tags.new" | t }}
+    </button>
+  </div>
+
+  <div class="tag-grid">
+    @for (tag of tags(); track tag.id) {
+      <article class="tag-card">
+        <span class="tag-symbol">#</span>
+        <strong>{{ tag.name }}</strong>
+        <span class="tag-actions">
+          <button mat-icon-button type="button" (click)="edit(tag)" [attr.aria-label]="'common.edit' | t">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button type="button" (click)="remove(tag)" [attr.aria-label]="'common.delete' | t">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </span>
+      </article>
+    } @empty {
+      <div class="empty-card">
+        <mat-icon>sell</mat-icon>
+        <p>{{ "tags.empty" | t }}</p>
+        <button mat-flat-button type="button" (click)="edit()">{{ "tags.new" | t }}</button>
+      </div>
+    }
+  </div>
+</div>

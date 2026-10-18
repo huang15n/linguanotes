@@ -1,52 +1,255 @@
 <div class="page">
-  <h1>{{ "review.title" | t }}</h1>
-  <div class="review-layout">
-    <section>
-      <h2>{{ "review.due" | t }} · {{ due().length }}</h2>
-      @if (current(); as card) {
-        <mat-card appearance="outlined" class="review-card">
+  <div class="page-header">
+    <div>
+      <span class="eyebrow"><mat-icon>style</mat-icon>{{ "review.eyebrow" | t }}</span>
+      <h1>{{ "review.title" | t }}</h1>
+      <p class="subtitle">{{ "review.subtitle" | t }}</p>
+    </div>
+  </div>
+
+  <div class="tab-row">
+    <button mat-flat-button type="button" [class.secondary]="tab() !== 'selection'" (click)="setTab('selection')">
+      <mat-icon>checklist</mat-icon>
+      {{ "review.selectionTab" | t }}
+    </button>
+    <button mat-flat-button type="button" [class.secondary]="tab() !== 'cards'" (click)="setTab('cards')">
+      <mat-icon>style</mat-icon>
+      {{ "review.cardsTab" | t }} ({{ due().length }})
+    </button>
+  </div>
+
+  @if (tab() === "cards") {
+    <div class="review-layout">
+      <section>
+        <h2>{{ "review.due" | t }} · {{ due().length }}</h2>
+        @if (current(); as card) {
+          <mat-card appearance="outlined" class="review-card">
+            <mat-card-content>
+              <p class="front">{{ card.frontText }}</p>
+              @if (revealed()) {
+                <div class="back">{{ card.backText }}</div>
+                <div class="rating-row">
+                  <button mat-button type="button" (click)="answerDue('AGAIN')">{{ "review.again" | t }}</button>
+                  <button mat-button type="button" (click)="answerDue('HARD')">{{ "review.hard" | t }}</button>
+                  <button mat-flat-button type="button" (click)="answerDue('GOOD')">{{ "review.good" | t }}</button>
+                  <button mat-flat-button type="button" (click)="answerDue('EASY')">{{ "review.easy" | t }}</button>
+                </div>
+              } @else {
+                <button mat-flat-button type="button" (click)="reveal()">{{ "review.reveal" | t }}</button>
+              }
+            </mat-card-content>
+          </mat-card>
+        } @else {
+          <div class="empty-card">
+            <mat-icon>task_alt</mat-icon>
+            <p>{{ "review.allDone" | t }}</p>
+          </div>
+        }
+      </section>
+
+      <section>
+        <mat-card appearance="outlined">
           <mat-card-content>
-            <p class="front">{{ card.frontText }}</p>
-            @if (revealed()) {
-              <div class="back">{{ card.backText }}</div>
-              <div class="rating-row">
-                <button mat-button (click)="answer('AGAIN')">{{ "review.again" | t }}</button>
-                <button mat-button (click)="answer('HARD')">{{ "review.hard" | t }}</button>
-                <button mat-flat-button (click)="answer('GOOD')">{{ "review.good" | t }}</button>
-                <button mat-flat-button (click)="answer('EASY')">{{ "review.easy" | t }}</button>
-              </div>
-            } @else {
-              <button mat-flat-button (click)="reveal()">{{ "review.reveal" | t }}</button>
-            }
+            <h2>{{ "review.create" | t }}</h2>
+            <form [formGroup]="form" (ngSubmit)="createCard()">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ "review.front" | t }}</mat-label>
+                <textarea matInput rows="2" formControlName="frontText"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>{{ "review.back" | t }}</mat-label>
+                <textarea matInput rows="2" formControlName="backText"></textarea>
+              </mat-form-field>
+              <button mat-flat-button type="submit">{{ "review.add" | t }}</button>
+            </form>
           </mat-card-content>
         </mat-card>
-      } @else {
-        <p class="muted">{{ "review.allDone" | t }}</p>
-      }
-    </section>
-    <section>
-      <mat-card appearance="outlined">
-        <mat-card-content>
-          <h2>{{ "review.create" | t }}</h2>
-          <form [formGroup]="form" (ngSubmit)="create()">
-            <mat-form-field appearance="outline"><mat-label>{{ "review.front" | t }}</mat-label><textarea matInput rows="3" formControlName="frontText"></textarea></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>{{ "review.back" | t }}</mat-label><textarea matInput rows="3" formControlName="backText"></textarea></mat-form-field>
-            <button mat-flat-button type="submit">{{ "review.add" | t }}</button>
-          </form>
-        </mat-card-content>
-      </mat-card>
-      <h2>{{ "review.cards" | t }}</h2>
-      @for (card of cards(); track card.flashcardId) {
-        <div class="card-row">
-          <div class="card-text">
-            <strong>{{ card.frontText }}</strong>
-            <span class="muted">{{ card.backText }}</span>
-          </div>
-          <button mat-icon-button type="button" (click)="remove(card)" [attr.aria-label]="'common.delete' | t">
-            <mat-icon>delete</mat-icon>
-          </button>
+
+        <div class="section-heading">
+          <h2>{{ "review.cards" | t }}</h2>
         </div>
-      } @empty { <p class="muted">{{ "review.noCards" | t }}</p> }
-    </section>
-  </div>
+        @for (card of cards(); track card.flashcardId) {
+          <div class="card-row">
+            <div class="card-text">
+              <strong>{{ card.frontText }}</strong>
+              <span class="muted">{{ card.backText }}</span>
+            </div>
+            <button mat-icon-button type="button" (click)="removeCard(card)" [attr.aria-label]="'common.delete' | t">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        } @empty {
+          <p class="muted">{{ "review.noCards" | t }}</p>
+        }
+      </section>
+    </div>
+  } @else {
+    @if (!sessionEntries().length) {
+      <div class="selection-layout">
+        <section class="selection-panel">
+          <div class="section-heading">
+            <h2>{{ "review.pickWords" | t }}</h2>
+            <span class="pill">{{ selectedCount() }} {{ "review.selected" | t }}</span>
+          </div>
+          <div class="filters">
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "review.language" | t }}</mat-label>
+              <mat-select [value]="languageFilter()" (selectionChange)="languageFilter.set($event.value)">
+                <mat-option [value]="null">{{ "common.all" | t }}</mat-option>
+                @for (language of languages(); track language.id) {
+                  <mat-option [value]="language.id">{{ language.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "review.levels" | t }}</mat-label>
+              <mat-select multiple [value]="levelFilter()" (selectionChange)="levelFilter.set($event.value)">
+                @for (level of filterLevels(); track level.code) {
+                  <mat-option [value]="level.code">{{ level.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "vocabulary.statusLabel" | t }}</mat-label>
+              <mat-select [value]="statusFilter()" (selectionChange)="statusFilter.set($event.value)">
+                <mat-option value="">{{ "common.all" | t }}</mat-option>
+                <mat-option value="NEW">{{ "vocabulary.status.NEW" | t }}</mat-option>
+                <mat-option value="LEARNING">{{ "vocabulary.status.LEARNING" | t }}</mat-option>
+                <mat-option value="MASTERED">{{ "vocabulary.status.MASTERED" | t }}</mat-option>
+                <mat-option value="TO_REVIEW">{{ "vocabulary.status.TO_REVIEW" | t }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="word-list">
+            @for (entry of filteredVocabulary(); track entry.id) {
+              <label class="word-row" [class.selected]="selectedIds().has(entry.id)">
+                <mat-checkbox [checked]="selectedIds().has(entry.id)" (change)="toggle(entry)" />
+                <span class="word-main">
+                  <strong>{{ entry.sourceText }}</strong>
+                  <span class="muted">{{ entry.translation }}</span>
+                </span>
+                @if (entry.level) { <span class="pill green">{{ entry.level }}</span> }
+                <span class="pill">{{ entry.targetLanguageName }}</span>
+              </label>
+            } @empty {
+              <div class="empty-card">
+                <mat-icon>translate</mat-icon>
+                <p>{{ "review.noWords" | t }}</p>
+                <a mat-flat-button routerLink="/vocabulary">{{ "review.addVocabulary" | t }}</a>
+              </div>
+            }
+          </div>
+        </section>
+
+        <aside class="session-config">
+          <mat-card appearance="outlined">
+            <mat-card-content>
+              <h3>{{ "review.session" | t }}</h3>
+              <p class="muted">{{ "review.sessionHint" | t }}</p>
+              <mat-form-field appearance="outline">
+                <mat-label>{{ "review.mode" | t }}</mat-label>
+                <mat-select [value]="mode()" (selectionChange)="mode.set($event.value)">
+                  <mat-option value="FLASHCARD">{{ "review.mode.FLASHCARD" | t }}</mat-option>
+                  <mat-option value="TARGET_TO_SOURCE">{{ "review.mode.TARGET_TO_SOURCE" | t }}</mat-option>
+                  <mat-option value="SOURCE_TO_TARGET">{{ "review.mode.SOURCE_TO_TARGET" | t }}</mat-option>
+                  <mat-option value="CHOICE">{{ "review.mode.CHOICE" | t }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <div class="row">
+                <button mat-button type="button" (click)="selectAll()">{{ "review.selectAll" | t }}</button>
+                <button mat-button type="button" (click)="clearSelection()">{{ "review.clear" | t }}</button>
+              </div>
+              <button mat-flat-button type="button" class="play-button" [disabled]="!selectedCount()" (click)="start()">
+                <mat-icon>play_arrow</mat-icon>
+                {{ "review.play" | t }}
+              </button>
+            </mat-card-content>
+          </mat-card>
+        </aside>
+      </div>
+    } @else if (sessionDone()) {
+      <div class="session-result">
+        <div class="result-circle">
+          <strong>{{ score() }}%</strong>
+          <span>{{ "review.score" | t }}</span>
+        </div>
+        <h2>{{ "review.finished" | t }}</h2>
+        <p class="muted">
+          {{ sessionCorrect() }} {{ "review.correct" | t }} ·
+          {{ sessionIncorrect() }} {{ "review.incorrect" | t }}
+        </p>
+        @if (lastSession(); as session) {
+          <p class="pill green">{{ "review.savedSession" | t }} #{{ session.id }}</p>
+        } @else if (saving()) {
+          <p class="muted">{{ "common.loading" | t }}</p>
+        }
+        <div class="row">
+          <button mat-flat-button type="button" (click)="restart()">{{ "review.restart" | t }}</button>
+          <button mat-stroked-button type="button" (click)="newSelection()">{{ "review.newSelection" | t }}</button>
+        </div>
+      </div>
+    } @else {
+      <div class="session-panel">
+        <div class="session-progress">
+          <span>{{ "review.wordNumber" | t }} {{ sessionIndex() + 1 }} / {{ sessionEntries().length }}</span>
+          <div class="bar-track">
+            <div class="bar-fill" [style.width.%]="progress()"></div>
+          </div>
+          <span class="pill green">{{ sessionCorrect() }}</span>
+          <span class="pill amber">{{ sessionIncorrect() }}</span>
+        </div>
+
+        @if (currentEntry(); as entry) {
+          <mat-card appearance="outlined" class="session-card">
+            <mat-card-content>
+              <span class="eyebrow">{{ "review.mode." + mode() | t }}</span>
+              <p class="prompt">{{ prompt() }}</p>
+
+              @if (mode() === "FLASHCARD") {
+                @if (!sessionRevealed()) {
+                  <button mat-flat-button type="button" (click)="revealSession()">{{ "review.reveal" | t }}</button>
+                } @else {
+                  <div class="back">{{ expected() }}</div>
+                  <div class="row">
+                    <button mat-button type="button" (click)="mark(false)">{{ "review.didNotKnow" | t }}</button>
+                    <button mat-flat-button type="button" (click)="mark(true)">{{ "review.knew" | t }}</button>
+                  </div>
+                }
+              } @else if (mode() === "CHOICE") {
+                <div class="choice-grid">
+                  @for (choice of choices(); track choice) {
+                    <button mat-stroked-button type="button" (click)="choose(choice)" [disabled]="feedback() !== null">
+                      {{ choice }}
+                    </button>
+                  }
+                </div>
+              } @else {
+                <form (ngSubmit)="checkText()" class="answer-form">
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ "review.yourAnswer" | t }}</mat-label>
+                    <input matInput [formControl]="answer" [disabled]="feedback() !== null" />
+                  </mat-form-field>
+                  <button mat-flat-button type="submit" [disabled]="feedback() !== null || !answer.value.trim()">
+                    {{ "review.check" | t }}
+                  </button>
+                </form>
+              }
+
+              @if (feedback(); as result) {
+                <div class="feedback" [class.correct]="result === 'correct'" [class.wrong]="result === 'wrong'">
+                  <mat-icon>{{ result === "correct" ? "check_circle" : "cancel" }}</mat-icon>
+                  <span>{{ result === "correct" ? ("review.correct" | t) : ("review.incorrect" | t) }}</span>
+                  @if (result === "wrong") {
+                    <strong>{{ expected() }}</strong>
+                  }
+                  <button mat-button type="button" (click)="next()">{{ "review.next" | t }}</button>
+                </div>
+              }
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    }
+  }
 </div>

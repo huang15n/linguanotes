@@ -46,14 +46,42 @@ public class VocabularyEntry {
     @Column(length = 80)
     private String partOfSpeech;
 
+    @Column(name = "grammatical_gender", length = 20)
+    private String grammaticalGender;
+
+    @Column(length = 30)
+    private String level;
+
+    @Column(columnDefinition = "TEXT")
+    private String definition;
+
     @Column(columnDefinition = "json")
     private String examplesJson;
+
+    @Column(columnDefinition = "json")
+    private String synonymsJson;
+
+    @Column(columnDefinition = "json")
+    private String antonymsJson;
 
     @Column(columnDefinition = "TEXT")
     private String personalNotes;
 
     @Column(nullable = false)
     private int difficulty = 1;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "learning_status", nullable = false, length = 20)
+    private LearningStatus learningStatus = LearningStatus.NEW;
+
+    @Column(length = 80)
+    private String region;
+
+    @Column(name = "plural_form", length = 255)
+    private String pluralForm;
+
+    @Column(name = "conjugation_json", columnDefinition = "json")
+    private String conjugationJson;
 
     @Column(name = "audio_file_id")
     private Long audioFileId;
@@ -67,8 +95,15 @@ public class VocabularyEntry {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    private LocalDateTime updatedAt;
+
     @PrePersist
     void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

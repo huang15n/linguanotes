@@ -1,65 +1,328 @@
 <div class="page">
-  <div class="row"><h1 class="grow">{{ "vocabulary.title" | t }}</h1></div>
+  <div class="page-header">
+    <div>
+      <span class="eyebrow"><mat-icon>translate</mat-icon>{{ "vocabulary.eyebrow" | t }}</span>
+      <h1>{{ "vocabulary.title" | t }}</h1>
+      <p class="subtitle">{{ "vocabulary.subtitle" | t }}</p>
+    </div>
+    <div class="row">
+      <button mat-stroked-button type="button" (click)="exportCsv()">
+        <mat-icon>download</mat-icon>
+        {{ "vocabulary.export" | t }}
+      </button>
+      <button mat-stroked-button type="button" (click)="openImport()" [disabled]="importing()">
+        <mat-icon>upload</mat-icon>
+        {{ "vocabulary.import" | t }}
+      </button>
+      <input #importInput type="file" accept=".csv,text/csv" hidden (change)="importCsv($event)" />
+    </div>
+  </div>
+
+  @if (importReport()) {
+    <div class="banner info">
+      <mat-icon>info</mat-icon>
+      {{ importReport() }}
+    </div>
+  }
+
+  <div class="vocab-filters">
+    <mat-form-field appearance="outline" class="grow">
+      <mat-label>{{ "vocabulary.search" | t }}</mat-label>
+      <input matInput [value]="query()" (input)="query.set($any($event.target).value)" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "vocabulary.language" | t }}</mat-label>
+      <mat-select [value]="languageFilter()" (selectionChange)="languageFilter.set($event.value)">
+        <mat-option [value]="null">{{ "common.all" | t }}</mat-option>
+        @for (language of languages(); track language.id) {
+          <mat-option [value]="language.id">{{ language.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "vocabulary.level" | t }}</mat-label>
+      <mat-select [value]="levelFilter()" (selectionChange)="levelFilter.set($event.value)">
+        <mat-option value="">{{ "common.all" | t }}</mat-option>
+        @for (level of filterLevels(); track level.code) {
+          <mat-option [value]="level.code">{{ level.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "vocabulary.type" | t }}</mat-label>
+      <mat-select [value]="typeFilter()" (selectionChange)="typeFilter.set($event.value)">
+        <mat-option value="">{{ "common.all" | t }}</mat-option>
+        @for (type of types; track type) {
+          <mat-option [value]="type">{{ type }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "vocabulary.statusLabel" | t }}</mat-label>
+      <mat-select [value]="statusFilter()" (selectionChange)="statusFilter.set($event.value)">
+        <mat-option value="">{{ "common.all" | t }}</mat-option>
+        @for (status of statuses; track status) {
+          <mat-option [value]="status">{{ "vocabulary.status." + status | t }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
   <div class="vocabulary-layout">
     <mat-card appearance="outlined" class="entry-form">
       <mat-card-content>
-        <h2>{{ (editingId() ? "vocabulary.edit" : "vocabulary.add") | t }}</h2>
+        <div class="form-heading">
+          <h2>{{ (editingId() ? "vocabulary.edit" : "vocabulary.add") | t }}</h2>
+          <span class="pill">{{ filtered().length }} {{ "vocabulary.results" | t }}</span>
+        </div>
         <form [formGroup]="form" (ngSubmit)="save()">
           <div class="language-pair">
             <mat-form-field appearance="outline">
               <mat-label>{{ "vocabulary.sourceLanguage" | t }}</mat-label>
               <mat-select formControlName="sourceLanguageId">
-                @for (language of languages(); track language.id) { <mat-option [value]="language.id">{{ language.name }}</mat-option> }
+                @for (language of languages(); track language.id) {
+                  <mat-option [value]="language.id">{{ language.name }}</mat-option>
+                }
               </mat-select>
             </mat-form-field>
             <mat-form-field appearance="outline">
               <mat-label>{{ "vocabulary.targetLanguage" | t }}</mat-label>
               <mat-select formControlName="targetLanguageId">
-                @for (language of languages(); track language.id) { <mat-option [value]="language.id">{{ language.name }}</mat-option> }
+                @for (language of languages(); track language.id) {
+                  <mat-option [value]="language.id">{{ language.name }}</mat-option>
+                }
               </mat-select>
             </mat-form-field>
           </div>
-          <mat-form-field appearance="outline"><mat-label>{{ "vocabulary.word" | t }}</mat-label><input matInput formControlName="sourceText" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>{{ "vocabulary.translation" | t }}</mat-label><input matInput formControlName="translation" /></mat-form-field>
+
           <div class="language-pair">
-            <mat-form-field appearance="outline"><mat-label>IPA</mat-label><input matInput formControlName="ipa" /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>{{ "vocabulary.partOfSpeech" | t }}</mat-label><input matInput formControlName="partOfSpeech" /></mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "vocabulary.word" | t }}</mat-label>
+              <input matInput formControlName="sourceText" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "vocabulary.translation" | t }}</mat-label>
+              <input matInput formControlName="translation" />
+            </mat-form-field>
           </div>
-          <mat-form-field appearance="outline"><mat-label>{{ "vocabulary.examples" | t }}</mat-label><textarea matInput rows="3" formControlName="examples"></textarea></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>{{ "vocabulary.notes" | t }}</mat-label><textarea matInput rows="2" formControlName="personalNotes"></textarea></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>{{ "vocabulary.tags" | t }}</mat-label><input matInput formControlName="tags" /></mat-form-field>
+
+          <div class="language-pair">
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "vocabulary.partOfSpeech" | t }}</mat-label>
+              <mat-select formControlName="partOfSpeech">
+                <mat-option value="">{{ "common.none" | t }}</mat-option>
+                @for (type of types; track type) {
+                  <mat-option [value]="type">{{ type }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "vocabulary.level" | t }}</mat-label>
+              <mat-select formControlName="level">
+                <mat-option value="">{{ "common.none" | t }}</mat-option>
+                @for (level of targetLevels(); track level.code) {
+                  <mat-option [value]="level.code">{{ level.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          @if (isNoun()) {
+            <div class="language-pair">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ "vocabulary.gender" | t }}</mat-label>
+                <mat-select formControlName="grammaticalGender">
+                  <mat-option value="">{{ "common.none" | t }}</mat-option>
+                  <mat-option value="MASCULINE">{{ "vocabulary.gender.masculine" | t }}</mat-option>
+                  <mat-option value="FEMININE">{{ "vocabulary.gender.feminine" | t }}</mat-option>
+                  <mat-option value="NEUTER">{{ "vocabulary.gender.neuter" | t }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>{{ "vocabulary.plural" | t }}</mat-label>
+                <input matInput formControlName="pluralForm" />
+              </mat-form-field>
+            </div>
+          }
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ "vocabulary.definition" | t }}</mat-label>
+            <textarea matInput rows="2" formControlName="definition"></textarea>
+          </mat-form-field>
+
+          <div class="language-pair">
+            <mat-form-field appearance="outline">
+              <mat-label>IPA</mat-label>
+              <input matInput formControlName="ipa" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "vocabulary.region" | t }}</mat-label>
+              <input matInput formControlName="region" />
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ "vocabulary.examples" | t }}</mat-label>
+            <textarea matInput rows="3" formControlName="examples"></textarea>
+          </mat-form-field>
+          <div class="language-pair">
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "vocabulary.synonyms" | t }}</mat-label>
+              <input matInput formControlName="synonyms" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "vocabulary.antonyms" | t }}</mat-label>
+              <input matInput formControlName="antonyms" />
+            </mat-form-field>
+          </div>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ "vocabulary.notes" | t }}</mat-label>
+            <textarea matInput rows="2" formControlName="personalNotes"></textarea>
+          </mat-form-field>
+          <div class="language-pair">
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "vocabulary.tags" | t }}</mat-label>
+              <input matInput formControlName="tags" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "vocabulary.statusLabel" | t }}</mat-label>
+              <mat-select formControlName="learningStatus">
+                @for (status of statuses; track status) {
+                  <mat-option [value]="status">{{ "vocabulary.status." + status | t }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
           <mat-form-field appearance="outline">
             <mat-label>{{ "vocabulary.difficulty" | t }}</mat-label>
             <mat-select formControlName="difficulty">
-              <mat-option [value]="1">1</mat-option><mat-option [value]="2">2</mat-option>
-              <mat-option [value]="3">3</mat-option><mat-option [value]="4">4</mat-option><mat-option [value]="5">5</mat-option>
+              <mat-option [value]="1">1</mat-option>
+              <mat-option [value]="2">2</mat-option>
+              <mat-option [value]="3">3</mat-option>
+              <mat-option [value]="4">4</mat-option>
+              <mat-option [value]="5">5</mat-option>
             </mat-select>
           </mat-form-field>
-          <div class="row">
-            @if (editingId()) { <button mat-button type="button" (click)="cancelEdit()">{{ "common.cancel" | t }}</button> }
+
+          @if (isVerb()) {
+            <section class="conjugation-editor">
+              <div class="form-heading">
+                <h3>{{ "vocabulary.conjugations" | t }}</h3>
+                <button mat-button type="button" (click)="addTable()">
+                  <mat-icon>add</mat-icon>
+                  {{ "vocabulary.addConjugation" | t }}
+                </button>
+              </div>
+              @for (table of conjugations(); track $index; let tableIndex = $index) {
+                <article class="conjugation-table">
+                  <div class="row">
+                    <mat-form-field appearance="outline" class="grow">
+                      <mat-label>{{ "vocabulary.conjugationTitle" | t }}</mat-label>
+                      <input matInput [value]="table.title" (input)="setTable(tableIndex, 'title', $any($event.target).value)" />
+                    </mat-form-field>
+                    <button mat-icon-button type="button" (click)="removeTable(tableIndex)" [attr.aria-label]="'common.delete' | t">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                  <div class="language-pair three">
+                    <mat-form-field appearance="outline">
+                      <mat-label>{{ "vocabulary.mood" | t }}</mat-label>
+                      <input matInput [value]="table.mood ?? ''" (input)="setTable(tableIndex, 'mood', $any($event.target).value)" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>{{ "vocabulary.tense" | t }}</mat-label>
+                      <input matInput [value]="table.tense ?? ''" (input)="setTable(tableIndex, 'tense', $any($event.target).value)" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>{{ "vocabulary.variant" | t }}</mat-label>
+                      <input matInput [value]="table.variant ?? ''" (input)="setTable(tableIndex, 'variant', $any($event.target).value)" />
+                    </mat-form-field>
+                  </div>
+                  <table class="conjugation-grid">
+                    <thead>
+                      <tr>
+                        <th>{{ "vocabulary.person" | t }}</th>
+                        <th>{{ "vocabulary.form" | t }}</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (row of table.rows; track $index; let rowIndex = $index) {
+                        <tr>
+                          <td><input [value]="row.person" (input)="setRow(tableIndex, rowIndex, 'person', $any($event.target).value)" /></td>
+                          <td><input [value]="row.form" (input)="setRow(tableIndex, rowIndex, 'form', $any($event.target).value)" /></td>
+                          <td>
+                            <button mat-icon-button type="button" (click)="removeRow(tableIndex, rowIndex)" [attr.aria-label]="'common.delete' | t">
+                              <mat-icon>remove</mat-icon>
+                            </button>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                  <button mat-button type="button" (click)="addRow(tableIndex)">
+                    <mat-icon>add</mat-icon>
+                    {{ "vocabulary.addRow" | t }}
+                  </button>
+                </article>
+              }
+            </section>
+          }
+
+          <div class="row form-actions">
+            @if (editingId()) {
+              <button mat-button type="button" (click)="cancelEdit()">{{ "common.cancel" | t }}</button>
+            }
             <button mat-flat-button type="submit">{{ "common.save" | t }}</button>
           </div>
         </form>
       </mat-card-content>
     </mat-card>
+
     <section class="entry-list">
-      @for (entry of entries(); track entry.id) {
+      @for (entry of filtered(); track entry.id) {
         <article class="entry-row">
           <div class="entry-main">
-            <strong>{{ entry.sourceText }}</strong>
-            <span class="muted">{{ entry.sourceLanguageName }} → {{ entry.targetLanguageName }}</span>
-            <span>{{ entry.translation }}</span>
-            @if (entry.ipa || entry.partOfSpeech) { <span class="muted">{{ entry.ipa }} {{ entry.partOfSpeech }}</span> }
-            @for (example of entry.examples; track $index) { <p class="example">{{ example }}</p> }
-            <div class="tags">@for (tag of entry.tags; track tag) { <span>{{ tag }}</span> }</div>
+            <div class="entry-title">
+              <strong>{{ entry.sourceText }}</strong>
+              <span class="entry-arrow">→</span>
+              <span>{{ entry.translation }}</span>
+            </div>
+            <div class="note-meta">
+              <span class="pill">{{ entry.targetLanguageName }}</span>
+              @if (entry.level) { <span class="pill green">{{ entry.level }}</span> }
+              @if (entry.partOfSpeech) { <span class="pill">{{ entry.partOfSpeech }}</span> }
+              <span class="pill amber">{{ "vocabulary.status." + entry.learningStatus | t }}</span>
+            </div>
+            @if (entry.definition) { <p class="definition">{{ entry.definition }}</p> }
+            @if (entry.ipa || entry.grammaticalGender) {
+              <span class="muted">{{ entry.ipa }} {{ entry.grammaticalGender }}</span>
+            }
+            @for (example of entry.examples; track $index) {
+              <p class="example">{{ example }}</p>
+            }
+            @if (entry.conjugations.length) {
+              <span class="pill">{{ entry.conjugations.length }} {{ "vocabulary.conjugationTables" | t }}</span>
+            }
+            <div class="chip-row">
+              @for (tag of entry.tags; track tag) { <span class="pill">#{{ tag }}</span> }
+            </div>
           </div>
           <div class="entry-actions">
-            <button mat-icon-button (click)="edit(entry)" [attr.aria-label]="'common.edit' | t"><mat-icon>edit</mat-icon></button>
-            <button mat-icon-button (click)="remove(entry)" [attr.aria-label]="'common.delete' | t"><mat-icon>delete</mat-icon></button>
+            <button mat-icon-button type="button" (click)="edit(entry)" [attr.aria-label]="'common.edit' | t">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button type="button" (click)="remove(entry)" [attr.aria-label]="'common.delete' | t">
+              <mat-icon>delete</mat-icon>
+            </button>
           </div>
         </article>
       } @empty {
-        <p class="muted">{{ "vocabulary.empty" | t }}</p>
+        <div class="empty-card">
+          <mat-icon>translate</mat-icon>
+          <p>{{ "vocabulary.empty" | t }}</p>
+        </div>
       }
     </section>
   </div>

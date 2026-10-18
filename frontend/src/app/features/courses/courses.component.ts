@@ -14,7 +14,14 @@ import { MatSelectModule } from "@angular/material/select";
 import { Observable, tap } from "rxjs";
 import { ApiService } from "../../core/services/api.service";
 import { LocaleService, TranslatePipe } from "../../core/services/locale.service";
-import { Course, Language, Lesson, Unit } from "../../core/models";
+import {
+  Course,
+  Language,
+  Lesson,
+  LessonSection,
+  LessonSectionType,
+  Unit,
+} from "../../core/models";
 import { UiService } from "../../shared/dialogs/dialogs";
 
 @Component({
@@ -41,7 +48,23 @@ export class CoursesComponent implements OnInit {
   units = signal<Unit[]>([]);
   selectedUnit = signal<Unit | null>(null);
   lessons = signal<Lesson[]>([]);
+  selectedLesson = signal<Lesson | null>(null);
+  sections = signal<LessonSection[]>([]);
+  editingSectionId = signal<number | null>(null);
   loading = signal(true);
+  sectionTypes: { value: LessonSectionType; label: string }[] = [
+    { value: "COMMUNICATION", label: "section.communication" },
+    { value: "DIALOGUE", label: "section.dialogue" },
+    { value: "VOCABULARY", label: "section.vocabulary" },
+    { value: "GRAMMAR", label: "section.grammar" },
+    { value: "PHONETICS", label: "section.phonetics" },
+    { value: "SPELLING", label: "section.spelling" },
+    { value: "CULTURE", label: "section.culture" },
+    { value: "EXERCISES", label: "section.exercises" },
+    { value: "REFERENCE", label: "section.reference" },
+    { value: "REVIEW", label: "section.review" },
+    { value: "CUSTOM", label: "section.custom" },
+  ];
   courseForm = new FormGroup({
     title: new FormControl("", {
       nonNullable: true,
@@ -65,6 +88,16 @@ export class CoursesComponent implements OnInit {
       validators: [Validators.required, Validators.maxLength(180)],
     }),
     content: new FormControl("", { nonNullable: true }),
+  });
+  sectionForm = new FormGroup({
+    type: new FormControl<LessonSectionType>("GRAMMAR", { nonNullable: true }),
+    title: new FormControl("", {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(180)],
+    }),
+    content: new FormControl("", { nonNullable: true }),
+    position: new FormControl(0, { nonNullable: true }),
+    visible: new FormControl(true, { nonNullable: true }),
   });
 
   ngOnInit() {
@@ -101,10 +134,22 @@ export class CoursesComponent implements OnInit {
       });
   }
 
+  courseLevels(): string[] {
+    const course = this.selectedCourse();
+    const languageId =
+      course?.languageId ?? this.courseForm.controls.languageId.value;
+    return (
+      this.languages().find((language) => language.id === languageId)?.levels ??
+      []
+    ).map((level) => level.label);
+  }
+
   selectCourse(course: Course) {
     this.selectedCourse.set(course);
     this.selectedUnit.set(null);
+    this.selectedLesson.set(null);
     this.lessons.set([]);
+    this.sections.set([]);
     this.api.units(course.id).subscribe((items) => this.units.set(items));
   }
 
@@ -129,7 +174,17 @@ export class CoursesComponent implements OnInit {
 
   selectUnit(unit: Unit) {
     this.selectedUnit.set(unit);
+    this.selectedLesson.set(null);
+    this.sections.set([]);
     this.api.lessons(unit.id).subscribe((items) => this.lessons.set(items));
+  }
+
+  selectLesson(lesson: Lesson) {
+    this.selectedLesson.set(lesson);
+    this.editingSectionId.set(null);
+    this.api
+      .lessonSections(lesson.id)
+      .subscribe((sections) => this.sections.set(sections));
   }
 
   createLesson() {
@@ -149,7 +204,81 @@ export class CoursesComponent implements OnInit {
       .subscribe((lesson) => {
         this.lessons.update((items) => [...items, lesson]);
         this.lessonForm.reset({ title: "", content: "" });
+        this.selectLesson(lesson);
       });
+  }
+
+  sectionTypeLabel(type: LessonSectionType) {
+    return this.locale.translate(
+      this.sectionTypes.find((item) => item.value === type)?.label ??
+        "section.custom",
+    );
+  }
+
+  editSection(section: LessonSection) {
+    this.editingSectionId.set(section.id);
+    this.sectionForm.setValue({
+      type: section.type,
+      title: section.title,
+      content: section.content ?? "",
+      position: section.position,
+      visible: section.visible,
+    });
+  }
+
+  cancelSectionEdit() {
+    this.editingSectionId.set(null);
+    this.sectionForm.reset({
+      type: "GRAMMAR",
+      title: "",
+      content: "",
+      position: this.sections().length,
+      visible: true,
+    });
+  }
+
+  saveSection() {
+    const lesson = this.selectedLesson();
+    if (!lesson || this.sectionForm.invalid) {
+      this.sectionForm.markAllAsTouched();
+      return;
+    }
+    const value = this.sectionForm.getRawValue();
+    const body = {
+      type: value.type,
+      title: value.title.trim(),
+      content: value.content,
+      contentJson: null,
+      position: value.position,
+      visible: value.visible,
+    };
+    const editingId = this.editingSectionId();
+    const request = editingId
+      ? this.api.updateLessonSection(lesson.id, editingId, body)
+      : this.api.createLessonSection(lesson.id, body);
+    request.subscribe((section) => {
+      this.sections.update((items) =>
+        editingId
+          ? items.map((item) => (item.id === section.id ? section : item))
+          : [...items, section],
+      );
+      this.cancelSectionEdit();
+      this.ui.toast(this.locale.translate("section.saved"));
+    });
+  }
+
+  removeSection(section: LessonSection) {
+    const lesson = this.selectedLesson();
+    if (!lesson) return;
+    this.confirmDelete(section.title, () =>
+      this.api.deleteLessonSection(lesson.id, section.id).pipe(
+        tap(() =>
+          this.sections.update((items) =>
+            items.filter((item) => item.id !== section.id),
+          ),
+        ),
+      ),
+    );
   }
 
   removeCourse() {
@@ -164,7 +293,9 @@ export class CoursesComponent implements OnInit {
           this.selectedCourse.set(null);
           this.units.set([]);
           this.selectedUnit.set(null);
+          this.selectedLesson.set(null);
           this.lessons.set([]);
+          this.sections.set([]);
         }),
       ),
     );
@@ -181,7 +312,9 @@ export class CoursesComponent implements OnInit {
           );
           if (this.selectedUnit()?.id === unit.id) {
             this.selectedUnit.set(null);
+            this.selectedLesson.set(null);
             this.lessons.set([]);
+            this.sections.set([]);
           }
         }),
       ),
@@ -193,11 +326,15 @@ export class CoursesComponent implements OnInit {
     if (!unit) return;
     this.confirmDelete(lesson.title, () =>
       this.api.deleteLesson(unit.id, lesson.id).pipe(
-        tap(() =>
+        tap(() => {
           this.lessons.update((items) =>
             items.filter((item) => item.id !== lesson.id),
-          ),
-        ),
+          );
+          if (this.selectedLesson()?.id === lesson.id) {
+            this.selectedLesson.set(null);
+            this.sections.set([]);
+          }
+        }),
       ),
     );
   }

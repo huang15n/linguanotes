@@ -10,6 +10,7 @@ public interface NoteRepository extends JpaRepository<Note, Long>, JpaSpecificat
     boolean existsByLanguageId(Long languageId);
     long countByOwnerId(Long ownerId);
     long countByOwnerIdAndFavoriteTrue(Long ownerId);
+    List<Note> findAllByOwnerId(Long ownerId);
     List<Note> findTop5ByOwnerIdOrderByUpdatedAtDesc(Long ownerId);
     Optional<Note> findByIdAndOwnerId(Long id, Long ownerId);
 }

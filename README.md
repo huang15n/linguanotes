@@ -64,7 +64,7 @@ sont réservées au développement local.
 | Variable | Rôle | Défaut |
 | --- | --- | --- |
 | `DB_URL` | URL JDBC MySQL | `jdbc:mysql://localhost:3306/linguanotes_app...` |
-| `DB_USER` / `DB_PASSWORD` | Identifiants MySQL | `linguanotes` / `lingua-local-only` |
+| `DB_USER` / `DB_PASSWORD` | Identifiants MySQL | selon votre installation locale |
 | `COOKIE_SECURE` | Cookie de session HTTPS uniquement | `false` |
 | `APP_PUBLIC_URL` | URL publique (liens de réinitialisation) | `http://localhost:4200` |
 | `FILE_STORAGE_DIR` | Stockage privé des fichiers | `./data/files` |
@@ -80,17 +80,26 @@ moins 12 caractères.
 
 - Inscription, connexion/déconnexion par session HttpOnly avec protection CSRF.
 - Rôles `USER`, `TEACHER`, `ADMIN` et page d'administration des comptes.
-- Notes privées (Markdown, langue, leçon, étiquettes, favoris) avec recherche.
-- Hiérarchie cours → unités → leçons.
-- Vocabulaire multilingue (IPA, exemples, étiquettes, difficulté).
-- Quiz multi-questions corrigés côté serveur, historique des tentatives.
-- Flashcards, révision espacée (SM-2 simplifié) et progression.
+- Notes : Markdown H1–H5, images, sauvegarde automatique avec brouillon local,
+  niveaux par langue, visibilité, étiquettes, favoris, J'aime et commentaires.
+- Référentiel de niveaux par langue : IELTS pour l'anglais, A1–C2 pour le français
+  et l'espagnol, traditionnel/simplifié pour le chinois.
+- Cours → unités → leçons → sections pédagogiques flexibles (dialogue, grammaire,
+  vocabulaire, phonétique, culture, exercices, référence, révisions…).
+- Vocabulaire enrichi : type grammatical, genre, définition, IPA, exemples,
+  synonymes, antonymes, statut d'apprentissage et tableaux de conjugaison.
+- Import/export CSV du vocabulaire avec rapport d'importation.
+- Quiz paramétrables : langue, niveau, notion, introduction, statut, seuil de
+  réussite, nombre de tentatives et mode aperçu ; correction côté serveur.
+- Révisions : sélection de mots par langue/niveau/statut, cartes, traduction,
+  choix multiple et enregistrement des sessions.
+- Tableau de bord et progression repensés, thème clair/sombre, interface
+  FR/ES/EN/ZH-CN.
 - Import PDF textuel, DOCX, XLSX et XLS avec aperçu avant confirmation.
-- Gestion des fichiers privés (documents et audio), téléchargement contrôlé.
+- Gestion des fichiers privés (documents, images et audio), téléchargement contrôlé.
 - Assistant IA compatible OpenAI, limité à 20 générations par utilisateur/jour.
-- Interface FR/ES/EN/ZH-CN, thème clair/sombre, objectif quotidien.
 - Export JSON et suppression de compte.
-- Migrations Flyway, validation Hibernate et OpenAPI/Swagger.
+- Migrations Flyway V1–V9, validation Hibernate et OpenAPI/Swagger.
 
 ## Structure du dépôt
 
@@ -112,6 +121,8 @@ frontend/                 Application Angular
   src/app/
     core/                 Guards, i18n, interceptors, modèles, services
     shared/               Dialogues et éditeur Markdown
+    features/             Notes, cours, vocabulaire, révisions, exercices,
+                          progression, fichiers, étiquettes, administration…
     features/             Un dossier par fonctionnalité
     app.routes.ts         Routage lazy-loading
     app.config.ts         Providers, CSRF, initialisation

@@ -1,4 +1,15 @@
-import { Component, inject, input, OnInit, signal } from "@angular/core";
+import {
+  Component,
+  DestroyRef,
+  HostListener,
+  OnDestroy,
+  OnInit,
+  inject,
+  input,
+  signal,
+} from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { DatePipe } from "@angular/common";
 import {
   FormControl,
   FormGroup,
@@ -6,18 +17,37 @@ import {
   Validators,
 } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
-import { MatCardModule } from "@angular/material/card";
 import { MatButtonModule } from "@angular/material/button";
+import { MatCardModule } from "@angular/material/card";
 import { MatIconModule } from "@angular/material/icon";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
 import { MatSlideToggleModule } from "@angular/material/slide-toggle";
+import { MatTooltipModule } from "@angular/material/tooltip";
+import { catchError, debounceTime, of, switchMap, tap } from "rxjs";
 import { MarkdownEditorComponent } from "../../shared/markdown/markdown-editor.component";
 import { ApiService } from "../../core/services/api.service";
-import { LocaleService, TranslatePipe } from "../../core/services/locale.service";
+import {
+  LocaleService,
+  TranslatePipe,
+} from "../../core/services/locale.service";
 import { UiService } from "../../shared/dialogs/dialogs";
-import { Language, NOTE_TYPES, NoteRequest, NoteType } from "../../core/models";
+import {
+  Language,
+  LanguageLevel,
+  NOTE_TYPES,
+  NoteRequest,
+  NoteType,
+  NoteVisibility,
+  Tag,
+} from "../../core/models";
+
+type SaveState = "saved" | "saving" | "unsaved" | "draft" | "conflict" | "error";
+
+const DEFAULT_LEVELS: LanguageLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"].map(
+  (code, index) => ({ id: index, code, label: code, position: index }),
+);
 
 @Component({
   imports: [
@@ -25,6 +55,7 @@ import { Language, NOTE_TYPES, NoteRequest, NoteType } from "../../core/models";
     TranslatePipe,
     ReactiveFormsModule,
     RouterLink,
+    DatePipe,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -32,19 +63,35 @@ import { Language, NOTE_TYPES, NoteRequest, NoteType } from "../../core/models";
     MatInputModule,
     MatSelectModule,
     MatSlideToggleModule,
+    MatTooltipModule,
   ],
   styleUrl: "./note-form.component.scss",
   templateUrl: "./note-form.component.html",
 })
-export class NoteFormComponent implements OnInit {
+export class NoteFormComponent implements OnInit, OnDestroy {
   id = input<string>();
   private api = inject(ApiService);
-  private locale = inject(LocaleService);
+  locale = inject(LocaleService);
   private ui = inject(UiService);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
+  private ready = false;
   languages = signal<Language[]>([]);
+  tagCatalog = signal<Tag[]>([]);
   lessonOptions = signal<{ id: number; label: string }[]>([]);
+  saveState = signal<SaveState>("saved");
+  lastSavedAt = signal<string | null>(null);
+  draftRestored = signal(false);
+  conflict = signal(false);
+  private version = signal(0);
+  private dirty = false;
   types = NOTE_TYPES;
+  visibilityOptions: { value: NoteVisibility; label: string }[] = [
+    { value: "PRIVATE", label: "note.visibilityPrivate" },
+    { value: "SHARED", label: "note.visibilityShared" },
+    { value: "CLASS", label: "note.visibilityClass" },
+    { value: "PUBLIC", label: "note.visibilityPublic" },
+  ];
   tl = (type: string) => this.locale.translate(`type.${type}`);
   form = new FormGroup({
     title: new FormControl("", {
@@ -52,57 +99,260 @@ export class NoteFormComponent implements OnInit {
       validators: [Validators.required, Validators.maxLength(255)],
     }),
     languageId: new FormControl<number | null>(null),
+    level: new FormControl<string | null>(null),
+    visibility: new FormControl<NoteVisibility>("PRIVATE", {
+      nonNullable: true,
+    }),
     lessonId: new FormControl<number | null>(null),
     type: new FormControl<NoteType>("OTHER", { nonNullable: true }),
     unit: new FormControl("", { nonNullable: true }),
-    tags: new FormControl("", { nonNullable: true }),
+    tags: new FormControl<string[]>([], { nonNullable: true }),
     favorite: new FormControl(false, { nonNullable: true }),
     content: new FormControl("", { nonNullable: true }),
   });
+
   ngOnInit() {
-    this.api.languages().subscribe((l) => this.languages.set(l));
+    this.api.languages().subscribe((languages) => this.languages.set(languages));
+    this.api.tags().subscribe((tags) => this.tagCatalog.set(tags));
     this.loadLessonOptions();
+
+    this.form.controls.languageId.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((languageId) => {
+        const levels = this.levelsFor(languageId);
+        if (!levels.some((level) => level.code === this.form.controls.level.value)) {
+          this.form.controls.level.setValue(levels[0]?.code ?? null);
+        }
+      });
+
     const id = this.id();
-    if (id)
-      this.api.note(id).subscribe((n) =>
+    if (id) {
+      this.api.note(id).subscribe((note) => {
         this.form.patchValue({
-          title: n.title,
-          languageId: n.languageId,
-          lessonId: n.lessonId,
-          type: n.type,
-          unit: n.unit ?? "",
-          tags: n.tags.join(", "),
-          favorite: n.favorite,
-          content: n.content ?? "",
-        }),
-      );
+          title: note.title,
+          languageId: note.languageId,
+          level: note.level,
+          visibility: note.visibility,
+          lessonId: note.lessonId,
+          type: note.type,
+          unit: note.unit ?? "",
+          tags: note.tags,
+          favorite: note.favorite,
+          content: note.content ?? "",
+        });
+        this.version.set(note.version);
+        this.lastSavedAt.set(note.lastSavedAt);
+        this.ready = true;
+        this.startSavePipeline();
+      });
+    } else {
+      const draft = this.readDraft();
+      if (draft) {
+        this.form.patchValue(draft);
+        this.draftRestored.set(true);
+        this.saveState.set("draft");
+      }
+      this.ready = true;
+      this.startSavePipeline();
+    }
   }
+
+  ngOnDestroy() {
+    this.writeDraft();
+  }
+
+  @HostListener("window:beforeunload", ["$event"])
+  warnBeforeUnload(event: BeforeUnloadEvent) {
+    if (this.dirty) {
+      this.writeDraft();
+      event.preventDefault();
+      event.returnValue = "";
+    }
+  }
+
+  levelsFor(languageId: number | null): LanguageLevel[] {
+    const language = this.languages().find((item) => item.id === languageId);
+    return language?.levels?.length ? language.levels : DEFAULT_LEVELS;
+  }
+
+  levelLabel(code: string | null) {
+    if (!code) return "";
+    const all = this.languages().flatMap((language) => language.levels);
+    return all.find((level) => level.code === code)?.label ?? code;
+  }
+
+  tagOptions() {
+    const names = new Set(this.tagCatalog().map((tag) => tag.name));
+    for (const tag of this.form.controls.tags.value) names.add(tag);
+    return [...names].sort((a, b) => a.localeCompare(b));
+  }
+
+  saveStateLabel() {
+    return this.locale.translate(`note.save.${this.saveState()}`);
+  }
+
+  saveStateIcon() {
+    switch (this.saveState()) {
+      case "saving":
+        return "sync";
+      case "saved":
+        return "cloud_done";
+      case "draft":
+        return "description";
+      case "conflict":
+        return "sync_problem";
+      case "error":
+        return "cloud_off";
+      default:
+        return "cloud_queue";
+    }
+  }
+
+  reload() {
+    const id = this.id();
+    if (!id) return;
+    this.api.note(id).subscribe((note) => {
+      this.form.patchValue({
+        title: note.title,
+        languageId: note.languageId,
+        level: note.level,
+        visibility: note.visibility,
+        lessonId: note.lessonId,
+        type: note.type,
+        unit: note.unit ?? "",
+        tags: note.tags,
+        favorite: note.favorite,
+        content: note.content ?? "",
+      });
+      this.version.set(note.version);
+      this.lastSavedAt.set(note.lastSavedAt);
+      this.conflict.set(false);
+      this.saveState.set("saved");
+    });
+  }
+
   save() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
-    const v = this.form.getRawValue();
-    const id = this.id();
+    const value = this.form.getRawValue();
     const body: NoteRequest = {
-      title: v.title,
-      content: v.content,
-      languageId: v.languageId,
-      lessonId: v.lessonId,
-      type: v.type,
-      unit: v.unit.trim() || null,
-      tags: v.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-      favorite: v.favorite,
+      title: value.title.trim(),
+      content: value.content,
+      languageId: value.languageId,
+      lessonId: value.lessonId,
+      type: value.type,
+      level: value.level,
+      visibility: value.visibility,
+      unit: value.unit.trim() || null,
+      tags: value.tags,
+      favorite: value.favorite,
     };
-    (id ? this.api.updateNote(id, body) : this.api.createNote(body)).subscribe(
-      (n) => {
-        this.ui.toast(this.locale.translate("note.saved"));
-        this.router.navigate(["/notes", n.id]);
-      },
-    );
+    (this.id()
+      ? this.api.updateNote(this.id()!, body)
+      : this.api.createNote(body)
+    ).subscribe((note) => {
+      this.clearDraft();
+      this.dirty = false;
+      this.saveState.set("saved");
+      this.ui.toast(this.locale.translate("note.saved"));
+      this.router.navigate(["/notes", note.id]);
+    });
+  }
+
+  private startSavePipeline() {
+    this.form.valueChanges
+      .pipe(
+        tap(() => {
+          this.dirty = true;
+          if (this.saveState() !== "conflict") this.saveState.set("unsaved");
+          this.writeDraft();
+        }),
+        debounceTime(1200),
+        switchMap(() => {
+          if (this.saveState() === "conflict") return of(null);
+          if (this.id() && this.form.controls.title.value.trim()) {
+            return this.autosave();
+          }
+          this.saveState.set("draft");
+          this.dirty = false;
+          return of(null);
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
+  }
+
+  private autosave() {
+    this.saveState.set("saving");
+    const value = this.form.getRawValue();
+    return this.api
+      .autosaveNote(this.id()!, {
+        title: value.title,
+        content: value.content,
+        version: this.version(),
+      })
+      .pipe(
+        tap((note) => {
+          this.version.set(note.version);
+          this.lastSavedAt.set(note.lastSavedAt);
+          this.dirty = false;
+          this.saveState.set("saved");
+        }),
+        catchError((error) => {
+          if (error?.status === 409) {
+            this.conflict.set(true);
+            this.saveState.set("conflict");
+          } else {
+            this.saveState.set("error");
+          }
+          return of(null);
+        }),
+      );
+  }
+
+  private storageKey() {
+    return `linguanotes.note-draft.${this.id() ?? "new"}`;
+  }
+
+  private writeDraft() {
+    try {
+      localStorage.setItem(
+        this.storageKey(),
+        JSON.stringify(this.form.getRawValue()),
+      );
+    } catch {
+      // Quota dépassé : la sauvegarde serveur reste la source de vérité.
+    }
+  }
+
+  private readDraft(): {
+    title: string;
+    languageId: number | null;
+    level: string | null;
+    visibility: NoteVisibility;
+    lessonId: number | null;
+    type: NoteType;
+    unit: string;
+    tags: string[];
+    favorite: boolean;
+    content: string;
+  } | null {
+    try {
+      const raw = localStorage.getItem(this.storageKey());
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private clearDraft() {
+    try {
+      localStorage.removeItem(this.storageKey());
+    } catch {
+      // Rien à faire si le stockage local est indisponible.
+    }
   }
 
   private loadLessonOptions() {

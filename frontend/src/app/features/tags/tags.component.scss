@@ -1,0 +1,40 @@
+.tag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.tag-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 16px 16px 18px;
+  border: 1px solid var(--ln-border);
+  border-radius: 18px;
+  background: var(--ln-card);
+  box-shadow: var(--ln-shadow);
+}
+
+.tag-symbol {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: var(--ln-primary-soft);
+  color: var(--ln-primary);
+  font-weight: 700;
+}
+
+.tag-card strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tag-actions {
+  display: flex;
+  flex-shrink: 0;
+}

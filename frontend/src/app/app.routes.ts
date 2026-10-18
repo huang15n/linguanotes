@@ -67,6 +67,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "tags",
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import("./features/tags/tags.component").then(
+        (m) => m.TagsComponent,
+      ),
+  },
+  {
     path: "courses",
     canActivate: [authGuard],
     loadComponent: () =>

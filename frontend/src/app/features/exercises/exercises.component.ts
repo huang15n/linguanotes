@@ -13,6 +13,7 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
+import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { ApiService } from "../../core/services/api.service";
 import {
   LocaleService,
@@ -22,6 +23,8 @@ import {
   Exercise,
   ExerciseAttemptSummary,
   ExerciseResult,
+  ExerciseStatus,
+  Language,
 } from "../../core/models";
 import { UiService } from "../../shared/dialogs/dialogs";
 
@@ -43,6 +46,7 @@ type QuestionForm = FormGroup<{
     MatIconModule,
     MatInputModule,
     MatSelectModule,
+    MatSlideToggleModule,
     TranslatePipe,
   ],
   styleUrl: "./exercises.component.scss",
@@ -53,9 +57,11 @@ export class ExercisesComponent implements OnInit {
   private locale = inject(LocaleService);
   private ui = inject(UiService);
   exercises = signal<Exercise[]>([]);
+  languages = signal<Language[]>([]);
   selected = signal<Exercise | null>(null);
   result = signal<ExerciseResult | null>(null);
   history = signal<ExerciseAttemptSummary[]>([]);
+  preview = signal(false);
   answers = new FormArray<FormControl<string>>([]);
   createForm = new FormGroup({
     title: new FormControl("", {
@@ -66,6 +72,14 @@ export class ExercisesComponent implements OnInit {
       nonNullable: true,
       validators: [Validators.required],
     }),
+    languageId: new FormControl<number | null>(null),
+    level: new FormControl("", { nonNullable: true }),
+    grammarTopic: new FormControl("", { nonNullable: true }),
+    introduction: new FormControl("", { nonNullable: true }),
+    status: new FormControl<ExerciseStatus>("PUBLISHED", { nonNullable: true }),
+    maxAttempts: new FormControl<number | null>(null),
+    passThreshold: new FormControl(60, { nonNullable: true }),
+    showAnswers: new FormControl(true, { nonNullable: true }),
     type: new FormControl("MULTIPLE_CHOICE", { nonNullable: true }),
     questions: new FormArray<QuestionForm>([this.questionGroup()]),
   });
@@ -76,6 +90,14 @@ export class ExercisesComponent implements OnInit {
 
   ngOnInit() {
     this.api.exercises().subscribe((items) => this.exercises.set(items));
+    this.api.languages().subscribe((items) => this.languages.set(items));
+  }
+
+  levels() {
+    const language = this.languages().find(
+      (item) => item.id === this.createForm.controls.languageId.value,
+    );
+    return language?.levels ?? [];
   }
 
   private questionGroup(): QuestionForm {
@@ -116,6 +138,14 @@ export class ExercisesComponent implements OnInit {
         title: value.title.trim(),
         instructions: value.instructions.trim(),
         lessonId: null,
+        languageId: value.languageId,
+        level: value.level || null,
+        grammarTopic: value.grammarTopic.trim() || null,
+        introduction: value.introduction.trim() || null,
+        status: value.status,
+        maxAttempts: value.maxAttempts,
+        passThreshold: value.passThreshold,
+        showAnswers: value.showAnswers,
         type: value.type,
         questions: value.questions.map((question) => ({
           prompt: question.prompt.trim(),
@@ -134,6 +164,14 @@ export class ExercisesComponent implements OnInit {
         this.createForm.reset({
           title: "",
           instructions: "",
+          languageId: null,
+          level: "",
+          grammarTopic: "",
+          introduction: "",
+          status: "PUBLISHED",
+          maxAttempts: null,
+          passThreshold: 60,
+          showAnswers: true,
           type: "MULTIPLE_CHOICE",
         });
         this.questions.clear();
@@ -166,7 +204,7 @@ export class ExercisesComponent implements OnInit {
       return;
     }
     this.api
-      .submitExercise(exercise.id, this.answers.getRawValue())
+      .submitExercise(exercise.id, this.answers.getRawValue(), this.preview())
       .subscribe((result) => {
         this.result.set(result);
         this.api

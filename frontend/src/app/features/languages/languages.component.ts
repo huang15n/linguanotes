@@ -9,6 +9,7 @@ import { Language } from "../../core/models";
 
 @Component({
   imports: [MatCardModule, MatButtonModule, MatIconModule, TranslatePipe],
+  styleUrl: "./languages.component.scss",
   templateUrl: "./languages.component.html",
 })
 export class LanguagesComponent implements OnInit {

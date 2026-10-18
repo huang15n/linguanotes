@@ -125,6 +125,7 @@ public class FileStorageService {
         return switch (extension) {
             case "pdf", "docx", "xlsx", "xls" -> "DOCUMENT";
             case "mp3", "wav", "ogg" -> "AUDIO";
+            case "jpg", "jpeg", "png", "gif", "webp" -> "IMAGE";
             default -> throw badRequest("Format non pris en charge");
         };
     }
@@ -140,6 +141,12 @@ public class FileStorageService {
             case "wav" -> bytes.length >= 12 && new String(bytes, 0, 4, java.nio.charset.StandardCharsets.US_ASCII).equals("RIFF") &&
                     new String(bytes, 8, 4, java.nio.charset.StandardCharsets.US_ASCII).equals("WAVE");
             case "ogg" -> startsWith(bytes, new byte[] {'O', 'g', 'g', 'S'});
+            case "jpg", "jpeg" -> startsWith(bytes, new byte[] {(byte) 0xff, (byte) 0xd8, (byte) 0xff});
+            case "png" -> startsWith(bytes, new byte[] {(byte) 0x89, 'P', 'N', 'G', 0x0d, 0x0a, 0x1a, 0x0a});
+            case "gif" -> startsWith(bytes, new byte[] {'G', 'I', 'F', '8'});
+            case "webp" -> startsWith(bytes, new byte[] {'R', 'I', 'F', 'F'}) &&
+                    bytes.length >= 12 &&
+                    new String(bytes, 8, 4, java.nio.charset.StandardCharsets.US_ASCII).equals("WEBP");
             default -> false;
         };
         if (!valid) throw badRequest("Le contenu du fichier ne correspond pas à son extension");
@@ -160,6 +167,10 @@ public class FileStorageService {
             case "mp3" -> "audio/mpeg";
             case "wav" -> "audio/wav";
             case "ogg" -> "audio/ogg";
+            case "jpg", "jpeg" -> "image/jpeg";
+            case "png" -> "image/png";
+            case "gif" -> "image/gif";
+            case "webp" -> "image/webp";
             default -> "application/octet-stream";
         };
     }

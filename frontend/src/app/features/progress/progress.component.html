@@ -1,19 +1,122 @@
 <div class="page">
-  <h1>{{ "progress.title" | t }}</h1>
+  <div class="page-header">
+    <div>
+      <span class="eyebrow"><mat-icon>insights</mat-icon>{{ "progress.eyebrow" | t }}</span>
+      <h1>{{ "progress.title" | t }}</h1>
+      <p class="subtitle">{{ "progress.subtitle" | t }}</p>
+    </div>
+    <a mat-flat-button routerLink="/review">
+      <mat-icon>style</mat-icon>
+      {{ "progress.reviewNow" | t }}
+    </a>
+  </div>
+
   @if (summary(); as stats) {
-    <div class="stats-grid">
-      <mat-card appearance="outlined"><mat-card-content><span class="stat-value">{{ stats.courseCount }}</span><span>{{ "progress.courses" | t }}</span></mat-card-content></mat-card>
-      <mat-card appearance="outlined"><mat-card-content><span class="stat-value">{{ stats.noteCount }}</span><span>{{ "progress.notes" | t }}</span></mat-card-content></mat-card>
-      <mat-card appearance="outlined"><mat-card-content><span class="stat-value">{{ stats.vocabularyCount }}</span><span>{{ "progress.vocabulary" | t }}</span></mat-card-content></mat-card>
-      <mat-card appearance="outlined"><mat-card-content><span class="stat-value">{{ stats.attemptCount }}</span><span>{{ "progress.attempts" | t }}</span></mat-card-content></mat-card>
-      <mat-card appearance="outlined"><mat-card-content><span class="stat-value">{{ stats.averageScore }}%</span><span>{{ "progress.average" | t }}</span></mat-card-content></mat-card>
-      <mat-card appearance="outlined"><mat-card-content><span class="stat-value">{{ stats.dueFlashcards }}</span><span>{{ "progress.due" | t }}</span></mat-card-content></mat-card>
+    <div class="stat-grid">
+      <a class="stat-card" routerLink="/courses">
+        <span class="stat-icon"><mat-icon>school</mat-icon></span>
+        <span class="stat-value">{{ stats.courseCount }}</span>
+        <span class="stat-label">{{ "progress.courses" | t }}</span>
+      </a>
+      <a class="stat-card" routerLink="/notes">
+        <span class="stat-icon"><mat-icon>description</mat-icon></span>
+        <span class="stat-value">{{ stats.noteCount }}</span>
+        <span class="stat-label">{{ "progress.notes" | t }}</span>
+      </a>
+      <a class="stat-card green" routerLink="/vocabulary">
+        <span class="stat-icon"><mat-icon>translate</mat-icon></span>
+        <span class="stat-value">{{ stats.vocabularyCount }}</span>
+        <span class="stat-label">{{ "progress.vocabulary" | t }}</span>
+      </a>
+      <a class="stat-card" routerLink="/exercises">
+        <span class="stat-icon"><mat-icon>quiz</mat-icon></span>
+        <span class="stat-value">{{ stats.attemptCount }}</span>
+        <span class="stat-label">{{ "progress.attempts" | t }}</span>
+      </a>
+      <div class="stat-card amber">
+        <span class="stat-icon"><mat-icon>verified</mat-icon></span>
+        <span class="stat-value">
+          {{ stats.attemptCount ? stats.averageScore + "%" : "—" }}
+        </span>
+        <span class="stat-label">{{ "progress.average" | t }}</span>
+      </div>
+      <a class="stat-card amber" routerLink="/review">
+        <span class="stat-icon"><mat-icon>event_repeat</mat-icon></span>
+        <span class="stat-value">{{ stats.dueFlashcards }}</span>
+        <span class="stat-label">{{ "progress.due" | t }}</span>
+      </a>
     </div>
   }
-  <h2>{{ "progress.history" | t }}</h2>
-  @for (point of history(); track point.date) {
-    <div class="history-row"><strong>{{ date(point.date) }}</strong><span>{{ point.attempts }} {{ "progress.attempts" | t }}</span><span>{{ point.averageScore }}%</span></div>
-  } @empty {
-    <p class="muted">{{ "progress.empty" | t }}</p>
-  }
+
+  <div class="progress-columns">
+    <section class="panel">
+      <div class="section-heading">
+        <h2>{{ "progress.history" | t }}</h2>
+        <span class="muted">{{ "progress.last30" | t }}</span>
+      </div>
+      @if (history().length) {
+        <div class="chart">
+          @for (point of history(); track point.date) {
+            <div class="chart-column" [title]="date(point.date) + ' · ' + point.attempts">
+              <div class="chart-track">
+                <div class="chart-bar" [style.height.%]="barHeight(point)"></div>
+              </div>
+              <span>{{ point.averageScore }}%</span>
+            </div>
+          }
+        </div>
+        <div class="history-table">
+          @for (point of history(); track point.date) {
+            <div class="history-row">
+              <strong>{{ date(point.date) }}</strong>
+              <span>{{ point.attempts }} {{ "progress.attempts" | t }}</span>
+              <span>{{ point.averageScore }}%</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty-card">
+          <mat-icon>insights</mat-icon>
+          <p>{{ "progress.empty" | t }}</p>
+          <a mat-flat-button routerLink="/exercises">{{ "progress.startExercise" | t }}</a>
+        </div>
+      }
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <h2>{{ "progress.next" | t }}</h2>
+      </div>
+      <div class="next-list">
+        <a class="action-card" routerLink="/review">
+          <mat-icon>style</mat-icon>
+          <div>
+            <strong>{{ "progress.reviewNow" | t }}</strong>
+            <span>{{ "progress.reviewHint" | t }}</span>
+          </div>
+        </a>
+        <a class="action-card" routerLink="/vocabulary">
+          <mat-icon>add_circle</mat-icon>
+          <div>
+            <strong>{{ "progress.addVocabulary" | t }}</strong>
+            <span>{{ "progress.addVocabularyHint" | t }}</span>
+          </div>
+        </a>
+        <a class="action-card" routerLink="/courses">
+          <mat-icon>menu_book</mat-icon>
+          <div>
+            <strong>{{ "progress.continueCourse" | t }}</strong>
+            <span>{{ "progress.continueCourseHint" | t }}</span>
+          </div>
+        </a>
+        <a class="action-card" routerLink="/notes/new">
+          <mat-icon>edit_note</mat-icon>
+          <div>
+            <strong>{{ "progress.newNote" | t }}</strong>
+            <span>{{ "progress.newNoteHint" | t }}</span>
+          </div>
+        </a>
+      </div>
+    </section>
+  </div>
 </div>

@@ -24,7 +24,7 @@ import {
 import { ApiService } from "../../core/services/api.service";
 import { LocaleService, TranslatePipe } from "../../core/services/locale.service";
 import { UiService } from "../../shared/dialogs/dialogs";
-import { Note, NoteFilters, NOTE_TYPES } from "../../core/models";
+import { Note, NoteFilters, NOTE_TYPES, Tag } from "../../core/models";
 
 @Component({
   imports: [
@@ -52,7 +52,7 @@ export class NotesListComponent {
   tl = (type: string) => this.locale.translate(`type.${type}`);
   loading = signal(true);
   languages = toSignal(this.api.languages(), { initialValue: [] });
-  tags = toSignal(this.api.tags(), { initialValue: [] });
+  tags = toSignal(this.api.tags(), { initialValue: [] as Tag[] });
   private refresh$ = new BehaviorSubject<void>(undefined);
   form = new FormGroup({
     q: new FormControl(""),

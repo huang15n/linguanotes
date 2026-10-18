@@ -45,7 +45,15 @@ Règles :
   JSON `{ "message": "..." }` par `GlobalExceptionHandler`.
 - Toute évolution du schéma passe par une migration Flyway versionnée dans
   `src/main/resources/db/migration`. Ne jamais modifier une migration déjà
-  appliquée.
+  appliquée (V1–V9 existent ; toute suite commence à V10).
+- Les référentiels transverses (`language_levels`, `tags`) sont exposés par leurs
+  propres services ; les notes et le vocabulaire les réutilisent.
+- Les sections de leçon (`lesson_sections`) et les conjugaisons
+  (`vocabulary_entries.conjugation_json`) sont volontairement flexibles : type de
+  section, ordre, visibilité et contenu JSON permettent d'adapter chaque cours.
+- Les notes utilisent une sauvegarde automatique (`PUT /api/notes/{id}/autosave`)
+  avec contrôle de version ; les interactions sociales sont isolées dans
+  `NoteInteractionService`.
 - Les entités utilisent Lombok (`@Getter`, `@Setter`, `@NoArgsConstructor`) ;
   pas de logique métier dans les entités.
 
@@ -86,18 +94,19 @@ src/app/
 │   ├── admin/           Gestion des comptes (ADMIN)
 │   ├── ai/              Assistant IA
 │   ├── auth/            Connexion, inscription, réinitialisation
-│   ├── courses/         Cours → unités → leçons
-│   ├── dashboard/       Tableau de bord
-│   ├── exercises/       Quiz multi-questions
-│   ├── files/           Fichiers privés (documents et audio)
+│   ├── courses/         Cours → unités → leçons → sections pédagogiques
+│   ├── dashboard/       Tableau de bord visuel
+│   ├── exercises/       Quiz paramétrables, pratique et aperçu
+│   ├── files/           Fichiers privés (documents, images et audio)
 │   ├── imports/         Import PDF/DOCX/XLSX
-│   ├── languages/       Référentiel des langues
-│   ├── notes/           Liste, détail et formulaire de notes
+│   ├── languages/       Référentiel des langues et de leurs niveaux
+│   ├── notes/           Liste, détail, éditeur, autosave, J'aime/commentaires
 │   ├── not-found/       Page 404
-│   ├── progress/        Statistiques d'apprentissage
-│   ├── review/          Flashcards et répétition espacée
+│   ├── progress/        Tableau de bord de progression
+│   ├── review/          Cartes dues + sessions par sélection de mots
 │   ├── settings/        Profil, sécurité, préférences, données
-│   └── vocabulary/      Fiches de vocabulaire
+│   ├── tags/            Gestion des étiquettes
+│   └── vocabulary/      Fiches enrichies, conjugaisons, import/export CSV
 ├── app.component.*      Coquille de l'application (navigation)
 ├── app.config.ts        Providers globaux, CSRF, initialisation
 └── app.routes.ts        Routage lazy-loading

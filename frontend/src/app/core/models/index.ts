@@ -7,6 +7,7 @@ export * from "./file.model";
 export * from "./import-job.model";
 export * from "./language.model";
 export * from "./note.model";
+export * from "./tag.model";
 export * from "./progress.model";
 export * from "./review.model";
 export * from "./vocabulary.model";

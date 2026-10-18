@@ -7,6 +7,8 @@ export type NoteType =
   | "READING"
   | "OTHER";
 
+export type NoteVisibility = "PRIVATE" | "SHARED" | "CLASS" | "PUBLIC";
+
 export const NOTE_TYPES: { value: NoteType; label: string }[] = [
   { value: "VOCABULARY", label: "Vocabulaire" },
   { value: "GRAMMAR", label: "Grammaire" },
@@ -28,11 +30,20 @@ export interface Note {
   languageName: string | null;
   lessonId: number | null;
   type: NoteType;
+  level: string | null;
+  visibility: NoteVisibility;
+  authorId: number;
+  authorName: string;
   unit: string | null;
   tags: string[];
   favorite: boolean;
+  version: number;
+  lastSavedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  likeCount: number;
+  commentCount: number;
+  likedByMe: boolean;
 }
 
 export interface NoteRequest {
@@ -41,6 +52,8 @@ export interface NoteRequest {
   languageId: number | null;
   lessonId?: number | null;
   type: NoteType;
+  level: string | null;
+  visibility: NoteVisibility;
   unit: string | null;
   tags: string[];
   favorite: boolean;
@@ -53,4 +66,21 @@ export interface NoteFilters {
   unit?: string | null;
   tag?: string | null;
   favorite?: boolean | null;
+}
+
+export interface NoteComment {
+  id: number;
+  noteId: number;
+  content: string;
+  authorId: number;
+  authorName: string;
+  owned: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface NoteLikeResult {
+  noteId: number;
+  likeCount: number;
+  likedByMe: boolean;
 }

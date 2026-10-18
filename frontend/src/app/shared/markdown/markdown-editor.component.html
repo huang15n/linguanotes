@@ -7,6 +7,13 @@
     <button mat-button type="button" class="h" [matTooltip]="'markdown.heading1' | t" [disabled]="off()" (click)="heading(1)">H1</button>
     <button mat-button type="button" class="h" [matTooltip]="'markdown.heading2' | t" [disabled]="off()" (click)="heading(2)">H2</button>
     <button mat-button type="button" class="h" [matTooltip]="'markdown.heading3' | t" [disabled]="off()" (click)="heading(3)">H3</button>
+    <button mat-button type="button" class="h" [matTooltip]="'markdown.heading4' | t" [disabled]="off()" (click)="heading(4)">H4</button>
+    <button mat-button type="button" class="h" [matTooltip]="'markdown.heading5' | t" [disabled]="off()" (click)="heading(5)">H5</button>
+    <span class="sep"></span>
+    <button mat-icon-button type="button" [matTooltip]="'markdown.image' | t" [disabled]="off() || imageUploading()" (click)="openImagePicker()">
+      <mat-icon>{{ imageUploading() ? "hourglass_top" : "image" }}</mat-icon>
+    </button>
+    <input #imageInput type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden (change)="uploadImage($event)" />
     <span class="sep"></span>
     <button mat-icon-button type="button" [matTooltip]="'markdown.bullets' | t" [disabled]="off()" (click)="bullets()"><mat-icon>format_list_bulleted</mat-icon></button>
     <button mat-icon-button type="button" [matTooltip]="'markdown.numbered' | t" [disabled]="off()" (click)="numbered()"><mat-icon>format_list_numbered</mat-icon></button>

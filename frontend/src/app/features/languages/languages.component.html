@@ -1,24 +1,45 @@
 <div class="page">
-  <div class="row">
-    <h1 class="grow">{{ "languages.title" | t }}</h1>
-    <button mat-flat-button (click)="edit()">
-      <mat-icon>add</mat-icon> {{ "languages.new" | t }}
+  <div class="page-header">
+    <div>
+      <span class="eyebrow"><mat-icon>language</mat-icon>{{ "languages.eyebrow" | t }}</span>
+      <h1>{{ "languages.title" | t }}</h1>
+      <p class="subtitle">{{ "languages.subtitle" | t }}</p>
+    </div>
+    <button mat-flat-button type="button" (click)="edit()">
+      <mat-icon>add</mat-icon>
+      {{ "languages.new" | t }}
     </button>
   </div>
+
   <div class="grid">
-    @for (l of list(); track l.id) {
-      <mat-card appearance="outlined">
+    @for (language of list(); track language.id) {
+      <mat-card appearance="outlined" class="language-card">
         <mat-card-header>
-          <mat-card-title>{{ l.name }}</mat-card-title>
-          <mat-card-subtitle>{{ l.code }}</mat-card-subtitle>
+          <span class="language-badge">{{ language.code.toUpperCase() }}</span>
+          <mat-card-title>{{ language.name }}</mat-card-title>
+          <mat-card-subtitle>
+            {{ language.levels.length }} {{ "languages.levels" | t }}
+          </mat-card-subtitle>
         </mat-card-header>
+        <mat-card-content>
+          <div class="chip-row">
+            @for (level of language.levels; track level.code) {
+              <span class="pill">{{ level.label }}</span>
+            } @empty {
+              <span class="muted">{{ "languages.noLevels" | t }}</span>
+            }
+          </div>
+        </mat-card-content>
         <mat-card-actions align="end">
-          <button mat-button (click)="edit(l)">{{ "common.edit" | t }}</button>
-          <button mat-button (click)="remove(l)">{{ "common.delete" | t }}</button>
+          <button mat-button type="button" (click)="edit(language)">{{ "common.edit" | t }}</button>
+          <button mat-button type="button" (click)="remove(language)">{{ "common.delete" | t }}</button>
         </mat-card-actions>
       </mat-card>
     } @empty {
-      <p class="muted">{{ "languages.empty" | t }}</p>
+      <div class="empty-card">
+        <mat-icon>language</mat-icon>
+        <p>{{ "languages.empty" | t }}</p>
+      </div>
     }
   </div>
 </div>

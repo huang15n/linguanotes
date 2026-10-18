@@ -26,3 +26,29 @@ export interface Lesson {
   type: "LESSON" | "VOCABULARY" | "DIALOGUE" | "GRAMMAR" | "EXERCISE";
   position: number;
 }
+
+export type LessonSectionType =
+  | "COMMUNICATION"
+  | "DIALOGUE"
+  | "VOCABULARY"
+  | "GRAMMAR"
+  | "PHONETICS"
+  | "SPELLING"
+  | "CULTURE"
+  | "EXERCISES"
+  | "REFERENCE"
+  | "REVIEW"
+  | "CUSTOM";
+
+export interface LessonSection {
+  id: number;
+  lessonId: number;
+  type: LessonSectionType;
+  title: string;
+  content: string | null;
+  contentJson: string | null;
+  position: number;
+  visible: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

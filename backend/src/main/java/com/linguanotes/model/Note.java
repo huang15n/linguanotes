@@ -14,14 +14,18 @@ public class Note {
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "lesson_id") private Lesson lesson;
     @ManyToOne(fetch = FetchType.EAGER) @JoinColumn(name = "language_id") private Language language;
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) private NoteType type = NoteType.OTHER;
+    @Column(length = 30) private String level;
+    @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) private NoteVisibility visibility = NoteVisibility.PRIVATE;
+    @Version @Column(nullable = false) private int version;
     private String unit;
     private boolean favorite;
+    private LocalDateTime lastSavedAt;
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "note_tags", joinColumns = @JoinColumn(name = "note_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> tags = new HashSet<>();
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @PrePersist void onCreate() { createdAt = updatedAt = LocalDateTime.now(); }
-    @PreUpdate void onUpdate() { updatedAt = LocalDateTime.now(); }
+    @PrePersist void onCreate() { createdAt = updatedAt = lastSavedAt = LocalDateTime.now(); }
+    @PreUpdate void onUpdate() { updatedAt = lastSavedAt = LocalDateTime.now(); }
 }

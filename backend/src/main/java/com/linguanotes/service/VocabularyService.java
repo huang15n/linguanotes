@@ -3,20 +3,34 @@ package com.linguanotes.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.linguanotes.dto.*;
-import com.linguanotes.model.*;
-import com.linguanotes.repository.*;
+import com.linguanotes.dto.ConjugationTable;
+import com.linguanotes.dto.VocabularyRequest;
+import com.linguanotes.dto.VocabularyResponse;
+import com.linguanotes.model.LearningStatus;
+import com.linguanotes.model.Language;
+import com.linguanotes.model.Lesson;
+import com.linguanotes.model.Tag;
+import com.linguanotes.model.VocabularyEntry;
+import com.linguanotes.repository.LanguageRepository;
+import com.linguanotes.repository.LessonRepository;
+import com.linguanotes.repository.TagRepository;
+import com.linguanotes.repository.UserAccountRepository;
+import com.linguanotes.repository.VocabularyEntryRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.HashSet;
 
 @Service
 @Transactional
 public class VocabularyService {
+    private static final TypeReference<List<String>> STRING_LIST = new TypeReference<>() { };
+    private static final TypeReference<List<ConjugationTable>> CONJUGATIONS = new TypeReference<>() { };
+
     private final VocabularyEntryRepository entries;
     private final UserAccountRepository accounts;
     private final LanguageRepository languages;
@@ -44,13 +58,13 @@ public class VocabularyService {
         VocabularyEntry entry = new VocabularyEntry();
         entry.setOwner(accounts.getReferenceById(ownerId));
         apply(entry, ownerId, request);
-        return map(entries.save(entry));
+        return map(entries.saveAndFlush(entry));
     }
 
     public VocabularyResponse update(Long ownerId, Long id, VocabularyRequest request) {
         VocabularyEntry entry = find(ownerId, id);
         apply(entry, ownerId, request);
-        return map(entries.save(entry));
+        return map(entries.saveAndFlush(entry));
     }
 
     public void delete(Long ownerId, Long id) {
@@ -64,9 +78,18 @@ public class VocabularyService {
         entry.setTranslation(request.translation().trim());
         entry.setIpa(request.ipa());
         entry.setPartOfSpeech(request.partOfSpeech());
-        entry.setExamplesJson(serialize(request.examples() == null ? List.of() : request.examples()));
+        entry.setGrammaticalGender(request.grammaticalGender());
+        entry.setLevel(request.level());
+        entry.setDefinition(request.definition());
+        entry.setExamplesJson(writeList(request.examples()));
+        entry.setSynonymsJson(writeList(request.synonyms()));
+        entry.setAntonymsJson(writeList(request.antonyms()));
         entry.setPersonalNotes(request.personalNotes());
         entry.setDifficulty(request.difficulty() == null ? 1 : request.difficulty());
+        entry.setLearningStatus(request.learningStatus() == null ? LearningStatus.NEW : request.learningStatus());
+        entry.setRegion(request.region());
+        entry.setPluralForm(request.pluralForm());
+        entry.setConjugationJson(write(request.conjugations() == null ? List.of() : request.conjugations()));
         entry.setLesson(request.lessonId() == null ? null : ownedLesson(ownerId, request.lessonId()));
         Set<Tag> entryTags = new HashSet<>();
         if (request.tags() != null) {
@@ -98,27 +121,63 @@ public class VocabularyService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Fiche introuvable"));
     }
 
-    private String serialize(List<String> examples) {
+    private String writeList(List<String> values) {
+        return write(values == null ? List.of() : values);
+    }
+
+    private String write(Object value) {
         try {
-            return json.writeValueAsString(examples);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Impossible d’enregistrer les exemples", e);
+            return json.writeValueAsString(value);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Impossible d’enregistrer la fiche de vocabulaire", exception);
+        }
+    }
+
+    private List<String> readList(String value) {
+        if (value == null || value.isBlank()) return List.of();
+        try {
+            return json.readValue(value, STRING_LIST);
+        } catch (JsonProcessingException exception) {
+            return List.of();
+        }
+    }
+
+    private List<ConjugationTable> readConjugations(String value) {
+        if (value == null || value.isBlank()) return List.of();
+        try {
+            return json.readValue(value, CONJUGATIONS);
+        } catch (JsonProcessingException exception) {
+            return List.of();
         }
     }
 
     private VocabularyResponse map(VocabularyEntry entry) {
-        List<String> examples;
-        try {
-            examples = entry.getExamplesJson() == null ? List.of()
-                    : json.readValue(entry.getExamplesJson(), new TypeReference<>() { });
-        } catch (JsonProcessingException e) {
-            examples = List.of();
-        }
-        return new VocabularyResponse(entry.getId(), entry.getLesson() == null ? null : entry.getLesson().getId(),
-                entry.getSourceLanguage().getId(), entry.getSourceLanguage().getName(),
-                entry.getTargetLanguage().getId(), entry.getTargetLanguage().getName(), entry.getSourceText(),
-                entry.getTranslation(), entry.getIpa(), entry.getPartOfSpeech(), examples,
-                entry.getPersonalNotes(), entry.getDifficulty(),
-                entry.getTags().stream().map(Tag::getName).sorted().toList(), entry.getAudioFileId());
+        return new VocabularyResponse(
+                entry.getId(),
+                entry.getLesson() == null ? null : entry.getLesson().getId(),
+                entry.getSourceLanguage().getId(),
+                entry.getSourceLanguage().getName(),
+                entry.getTargetLanguage().getId(),
+                entry.getTargetLanguage().getName(),
+                entry.getSourceText(),
+                entry.getTranslation(),
+                entry.getIpa(),
+                entry.getPartOfSpeech(),
+                entry.getGrammaticalGender(),
+                entry.getLevel(),
+                entry.getDefinition(),
+                readList(entry.getExamplesJson()),
+                readList(entry.getSynonymsJson()),
+                readList(entry.getAntonymsJson()),
+                entry.getPersonalNotes(),
+                entry.getDifficulty(),
+                entry.getLearningStatus(),
+                entry.getRegion(),
+                entry.getPluralForm(),
+                readConjugations(entry.getConjugationJson()),
+                entry.getTags().stream().map(Tag::getName).sorted().toList(),
+                entry.getAudioFileId(),
+                entry.getCreatedAt(),
+                entry.getUpdatedAt());
     }
 }

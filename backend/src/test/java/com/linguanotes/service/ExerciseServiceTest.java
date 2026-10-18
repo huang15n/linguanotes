@@ -4,8 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.linguanotes.dto.ExerciseAttemptRequest;
 import com.linguanotes.model.Exercise;
 import com.linguanotes.model.ExerciseAttempt;
+import com.linguanotes.model.ExerciseStatus;
+import com.linguanotes.model.UserAccount;
 import com.linguanotes.repository.ExerciseAttemptRepository;
 import com.linguanotes.repository.ExerciseRepository;
+import com.linguanotes.repository.LanguageRepository;
 import com.linguanotes.repository.LessonRepository;
 import com.linguanotes.repository.UserAccountRepository;
 import org.junit.jupiter.api.Test;
@@ -26,8 +29,13 @@ class ExerciseServiceTest {
     void scoringIsComputedOnTheServerFromStoredAnswers() {
         ExerciseRepository exercises = mock(ExerciseRepository.class);
         ExerciseAttemptRepository attempts = mock(ExerciseAttemptRepository.class);
+        UserAccount owner = new UserAccount();
+        owner.setId(1L);
+        owner.setName("Auteur");
         Exercise exercise = new Exercise();
         exercise.setId(5L);
+        exercise.setOwner(owner);
+        exercise.setStatus(ExerciseStatus.PUBLISHED);
         exercise.setTitle("Salutations");
         exercise.setQuestionsJson("""
                 [
@@ -35,20 +43,25 @@ class ExerciseServiceTest {
                   {"prompt":"Comment dire merci ?","options":[],"answer":"merci","explanation":"","points":1}
                 ]
                 """);
-        when(exercises.findByIdAndOwnerId(5L, 1L)).thenReturn(Optional.of(exercise));
-        when(attempts.save(any(ExerciseAttempt.class))).thenAnswer(invocation -> {
+        when(exercises.findById(5L)).thenReturn(Optional.of(exercise));
+        when(attempts.countByExerciseIdAndUserIdAndPreviewFalse(5L, 1L)).thenReturn(0L);
+        when(attempts.saveAndFlush(any(ExerciseAttempt.class))).thenAnswer(invocation -> {
             ExerciseAttempt saved = invocation.getArgument(0);
             saved.setId(9L);
             return saved;
         });
 
         ExerciseService service = new ExerciseService(exercises, attempts,
-                mock(UserAccountRepository.class), mock(LessonRepository.class), new ObjectMapper());
+                mock(UserAccountRepository.class), mock(LessonRepository.class),
+                mock(LanguageRepository.class), new ObjectMapper());
 
-        var result = service.submit(1L, 5L, new ExerciseAttemptRequest(List.of("  Bonjour ", "non")));
+        var result = service.submit(1L, 5L,
+                new ExerciseAttemptRequest(List.of("  Bonjour ", "non"), false));
 
         assertEquals(new BigDecimal("66.67"), result.score());
         assertEquals(9L, result.id());
+        assertTrue(result.passed());
+        assertEquals(60, result.passThreshold());
         assertTrue(result.results().get(0).correct());
         assertFalse(result.results().get(1).correct());
         assertEquals(2, result.results().get(0).pointsEarned());

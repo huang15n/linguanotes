@@ -1,25 +1,42 @@
 package com.linguanotes.controller;
 
-import com.linguanotes.security.AccountPrincipal;
-import com.linguanotes.service.NoteService;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.linguanotes.dto.TagRequest;
+import com.linguanotes.dto.TagResponse;
+import com.linguanotes.service.TagService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/tags")
 public class TagController {
-    private final NoteService notes;
+    private final TagService tags;
 
-    public TagController(NoteService notes) {
-        this.notes = notes;
+    public TagController(TagService tags) {
+        this.tags = tags;
     }
 
     @GetMapping
-    public List<String> tags(@AuthenticationPrincipal AccountPrincipal principal) {
-        return notes.allTags(principal.id());
+    public List<TagResponse> list() {
+        return tags.list();
+    }
+
+    @PostMapping
+    public ResponseEntity<TagResponse> create(@Valid @RequestBody TagRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(tags.create(request));
+    }
+
+    @PutMapping("/{id}")
+    public TagResponse update(@PathVariable Long id, @Valid @RequestBody TagRequest request) {
+        return tags.update(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        tags.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
