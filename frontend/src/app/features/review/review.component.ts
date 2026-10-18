@@ -1,4 +1,3 @@
-import { DatePipe } from "@angular/common";
 import { Component, OnInit, computed, inject, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import {
@@ -34,7 +33,6 @@ type Tab = "cards" | "selection";
 
 @Component({
   imports: [
-    DatePipe,
     RouterLink,
     ReactiveFormsModule,
     MatButtonModule,
