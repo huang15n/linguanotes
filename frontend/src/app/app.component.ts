@@ -10,9 +10,9 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatSelectModule } from "@angular/material/select";
 import { map } from "rxjs";
-import { LocaleService, TranslatePipe } from "./core/locale.service";
-import { ThemeService } from "./core/theme.service";
-import { AuthService } from "./core/auth.service";
+import { LocaleService, TranslatePipe } from "./core/services/locale.service";
+import { ThemeService } from "./core/services/theme.service";
+import { AuthService } from "./core/services/auth.service";
 
 @Component({
   selector: "app-root",

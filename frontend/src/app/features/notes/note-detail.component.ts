@@ -6,10 +6,10 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
 import { MatChipsModule } from "@angular/material/chips";
 import { MarkdownPipe } from "../../shared/markdown/markdown.pipe";
-import { ApiService } from "../../core/api.service";
-import { LocaleService, TranslatePipe } from "../../core/locale.service";
+import { ApiService } from "../../core/services/api.service";
+import { LocaleService, TranslatePipe } from "../../core/services/locale.service";
 import { UiService } from "../../shared/dialogs/dialogs";
-import { Note } from "../../models";
+import { Note } from "../../core/models";
 
 @Component({
   imports: [

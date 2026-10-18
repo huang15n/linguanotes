@@ -3,7 +3,7 @@ FROM node:22-alpine AS build
 WORKDIR /app
 ENV NG_CLI_ANALYTICS=false
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 COPY . .
 RUN npx ng build --configuration production
 

@@ -1,6 +1,6 @@
 package com.linguanotes.service;
 
-import com.linguanotes.dto.Dto.StoredFileResponse;
+import com.linguanotes.dto.StoredFileResponse;
 import com.linguanotes.model.StoredFile;
 import com.linguanotes.repository.StoredFileRepository;
 import com.linguanotes.repository.UserAccountRepository;

@@ -28,7 +28,11 @@
         <a mat-list-item routerLink="/review" routerLinkActive="active" (click)="open.set(false)"><mat-icon matListItemIcon>style</mat-icon><span matListItemTitle>{{ "nav.review" | t }}</span></a>
         <a mat-list-item routerLink="/progress" routerLinkActive="active" (click)="open.set(false)"><mat-icon matListItemIcon>insights</mat-icon><span matListItemTitle>{{ "nav.progress" | t }}</span></a>
         <a mat-list-item routerLink="/imports" routerLinkActive="active" (click)="open.set(false)"><mat-icon matListItemIcon>upload_file</mat-icon><span matListItemTitle>{{ "nav.imports" | t }}</span></a>
+        <a mat-list-item routerLink="/files" routerLinkActive="active" (click)="open.set(false)"><mat-icon matListItemIcon>folder</mat-icon><span matListItemTitle>{{ "nav.files" | t }}</span></a>
         <a mat-list-item routerLink="/ai" routerLinkActive="active" (click)="open.set(false)"><mat-icon matListItemIcon>auto_awesome</mat-icon><span matListItemTitle>{{ "nav.ai" | t }}</span></a>
+        @if (auth.isAdmin()) {
+          <a mat-list-item routerLink="/admin" routerLinkActive="active" (click)="open.set(false)"><mat-icon matListItemIcon>admin_panel_settings</mat-icon><span matListItemTitle>{{ "nav.admin" | t }}</span></a>
+        }
         <a mat-list-item routerLink="/settings" routerLinkActive="active" (click)="open.set(false)"><mat-icon matListItemIcon>settings</mat-icon><span matListItemTitle>{{ "nav.settings" | t }}</span></a>
       </mat-nav-list>
     </mat-sidenav>

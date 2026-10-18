@@ -14,10 +14,10 @@ import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
 import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { MarkdownEditorComponent } from "../../shared/markdown/markdown-editor.component";
-import { ApiService } from "../../core/api.service";
-import { LocaleService, TranslatePipe } from "../../core/locale.service";
+import { ApiService } from "../../core/services/api.service";
+import { LocaleService, TranslatePipe } from "../../core/services/locale.service";
 import { UiService } from "../../shared/dialogs/dialogs";
-import { Language, NOTE_TYPES, NoteRequest, NoteType } from "../../models";
+import { Language, NOTE_TYPES, NoteRequest, NoteType } from "../../core/models";
 
 @Component({
   imports: [
@@ -78,6 +78,10 @@ export class NoteFormComponent implements OnInit {
       );
   }
   save() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
     const v = this.form.getRawValue();
     const id = this.id();
     const body: NoteRequest = {

@@ -1,7 +1,7 @@
 package com.linguanotes.service;
 
-import com.linguanotes.dto.Dto.PreferenceRequest;
-import com.linguanotes.dto.Dto.UserPreferenceResponse;
+import com.linguanotes.dto.PreferenceRequest;
+import com.linguanotes.dto.UserPreferenceResponse;
 import com.linguanotes.model.UserPreference;
 import com.linguanotes.repository.UserAccountRepository;
 import com.linguanotes.repository.UserPreferenceRepository;

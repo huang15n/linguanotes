@@ -1,6 +1,6 @@
 package com.linguanotes.controller;
 
-import com.linguanotes.dto.Dto.*;
+import com.linguanotes.dto.*;
 import com.linguanotes.security.AccountPrincipal;
 import com.linguanotes.service.ExerciseService;
 import jakarta.validation.Valid;
@@ -33,6 +33,18 @@ public class ExerciseController {
     @GetMapping("/{id}")
     public ExerciseResponse get(@AuthenticationPrincipal AccountPrincipal principal, @PathVariable Long id) {
         return exercises.get(principal.id(), id);
+    }
+
+    @PutMapping("/{id}")
+    public ExerciseResponse update(@AuthenticationPrincipal AccountPrincipal principal, @PathVariable Long id,
+                                   @Valid @RequestBody ExerciseRequest request) {
+        return exercises.update(principal.id(), id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal AccountPrincipal principal, @PathVariable Long id) {
+        exercises.delete(principal.id(), id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/attempts")

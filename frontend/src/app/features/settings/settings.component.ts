@@ -12,13 +12,14 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
 import { MatSnackBar } from "@angular/material/snack-bar";
-import { ApiService } from "../../core/api.service";
-import { AuthService } from "../../core/auth.service";
+import { ApiService } from "../../core/services/api.service";
+import { AuthService } from "../../core/services/auth.service";
 import {
   AppLocale,
   LocaleService,
   TranslatePipe,
-} from "../../core/locale.service";
+} from "../../core/services/locale.service";
+import { UiService } from "../../shared/dialogs/dialogs";
 
 @Component({
   imports: [
@@ -39,6 +40,7 @@ export class SettingsComponent implements OnInit {
   private locale = inject(LocaleService);
   private router = inject(Router);
   private snack = inject(MatSnackBar);
+  private ui = inject(UiService);
   profile = new FormGroup({
     name: new FormControl(this.auth.account()?.name ?? "", {
       nonNullable: true,
@@ -150,15 +152,15 @@ export class SettingsComponent implements OnInit {
       this.deleteForm.markAllAsTouched();
       return;
     }
-    if (!window.confirm(this.locale.translate("settings.deleteConfirm")))
-      return;
-    this.api.csrf().subscribe(() =>
-      this.api
-        .deleteAccount(this.deleteForm.controls.password.value)
-        .subscribe(() => {
-          this.auth.account.set(null);
-          this.router.navigateByUrl("/auth/login");
-        }),
-    );
+    this.ui
+      .confirm(this.locale.translate("settings.deleteConfirm"))
+      .subscribe(() =>
+        this.api
+          .deleteAccount(this.deleteForm.controls.password.value)
+          .subscribe(() => {
+            this.auth.account.set(null);
+            this.router.navigateByUrl("/auth/login");
+          }),
+      );
   }
 }

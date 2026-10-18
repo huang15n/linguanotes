@@ -3,7 +3,7 @@ package com.linguanotes.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.linguanotes.dto.Dto.*;
+import com.linguanotes.dto.*;
 import com.linguanotes.model.*;
 import com.linguanotes.repository.*;
 import org.springframework.http.HttpStatus;

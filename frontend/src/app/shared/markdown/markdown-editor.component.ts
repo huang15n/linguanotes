@@ -10,7 +10,7 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatButtonToggleModule } from "@angular/material/button-toggle";
 import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from "@angular/material/tooltip";
-import { TranslatePipe } from "../../core/locale.service";
+import { TranslatePipe } from "../../core/services/locale.service";
 import { MarkdownPipe } from "./markdown.pipe";
 
 type Mode = "edit" | "split" | "preview";

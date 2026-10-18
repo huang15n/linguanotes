@@ -1,6 +1,24 @@
-node_modules
-dist
-.angular
-target
-.idea
+# Dépendances et artefacts de construction
+node_modules/
+dist/
+.angular/
+target/
+*.class
+*.jar
+
+# Variables d'environnement et secrets
+.env
+.env.*
+!.env.example
+
+# Données d'exécution (stockage privé des fichiers)
+backend/data/
+data/
+*.log
+
+# IDE et système
+.idea/
+.vscode/
+*.iml
 .DS_Store
+Thumbs.db

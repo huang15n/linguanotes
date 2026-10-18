@@ -14,7 +14,7 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatSnackBar } from "@angular/material/snack-bar";
-import { TranslatePipe } from "../../core/locale.service";
+import { TranslatePipe } from "../../core/services/locale.service";
 import { filter } from "rxjs";
 
 export interface Field {

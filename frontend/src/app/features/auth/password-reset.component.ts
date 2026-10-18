@@ -12,8 +12,8 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 import { catchError, map, of, switchMap } from "rxjs";
-import { ApiService } from "../../core/api.service";
-import { LocaleService, TranslatePipe } from "../../core/locale.service";
+import { ApiService } from "../../core/services/api.service";
+import { LocaleService, TranslatePipe } from "../../core/services/locale.service";
 
 @Component({
   imports: [

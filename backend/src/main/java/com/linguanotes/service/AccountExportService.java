@@ -1,6 +1,6 @@
 package com.linguanotes.service;
 
-import com.linguanotes.dto.Dto.AccountResponse;
+import com.linguanotes.dto.AccountResponse;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;

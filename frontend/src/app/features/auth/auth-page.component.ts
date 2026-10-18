@@ -1,4 +1,5 @@
-import { Component, inject, signal } from "@angular/core";
+import { Component, effect, inject, signal } from "@angular/core";
+import { toSignal } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import {
   FormControl,
@@ -12,8 +13,9 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 import { catchError, map, of } from "rxjs";
-import { LocaleService, TranslatePipe } from "../../core/locale.service";
-import { AuthService } from "../../core/auth.service";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { LocaleService, TranslatePipe } from "../../core/services/locale.service";
+import { AuthService } from "../../core/services/auth.service";
 
 @Component({
   imports: [
@@ -34,10 +36,18 @@ export class AuthPageComponent {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private locale = inject(LocaleService);
-  mode =
-    this.route.snapshot.paramMap.get("mode") === "register"
-      ? "register"
-      : "login";
+  readonly mode = toSignal(
+    this.route.paramMap.pipe(
+      map((params) => (params.get("mode") === "register" ? "register" : "login")),
+      takeUntilDestroyed(),
+    ),
+    {
+      initialValue:
+        this.route.snapshot.paramMap.get("mode") === "register"
+          ? "register"
+          : "login",
+    },
+  );
   busy = signal(false);
   error = signal("");
   form = new FormGroup({
@@ -64,8 +74,15 @@ export class AuthPageComponent {
   });
 
   constructor() {
-    if (this.mode === "register")
-      this.form.controls.name.addValidators(Validators.required);
+    effect(() => {
+      const control = this.form.controls.name;
+      if (this.mode() === "register") {
+        control.addValidators(Validators.required);
+      } else {
+        control.removeValidators(Validators.required);
+      }
+      control.updateValueAndValidity();
+    });
   }
 
   submit() {
@@ -77,7 +94,7 @@ export class AuthPageComponent {
     this.error.set("");
     const { name, email, password } = this.form.getRawValue();
     const request =
-      this.mode === "register"
+      this.mode() === "register"
         ? this.auth.register({
             name: name.trim(),
             email: email.trim(),

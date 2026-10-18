@@ -1,6 +1,6 @@
 package com.linguanotes.controller;
 
-import com.linguanotes.dto.Dto.StoredFileResponse;
+import com.linguanotes.dto.StoredFileResponse;
 import com.linguanotes.model.StoredFile;
 import com.linguanotes.security.AccountPrincipal;
 import com.linguanotes.service.FileStorageService;

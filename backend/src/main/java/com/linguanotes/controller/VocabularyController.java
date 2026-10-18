@@ -1,7 +1,7 @@
 package com.linguanotes.controller;
 
-import com.linguanotes.dto.Dto.VocabularyRequest;
-import com.linguanotes.dto.Dto.VocabularyResponse;
+import com.linguanotes.dto.VocabularyRequest;
+import com.linguanotes.dto.VocabularyResponse;
 import com.linguanotes.security.AccountPrincipal;
 import com.linguanotes.service.VocabularyService;
 import jakarta.validation.Valid;

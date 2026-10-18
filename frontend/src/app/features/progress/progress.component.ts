@@ -1,8 +1,8 @@
 import { Component, OnInit, inject, signal } from "@angular/core";
 import { MatCardModule } from "@angular/material/card";
-import { ApiService } from "../../core/api.service";
-import { LocaleService, TranslatePipe } from "../../core/locale.service";
-import { ProgressPoint, ProgressSummary } from "../../models";
+import { ApiService } from "../../core/services/api.service";
+import { LocaleService, TranslatePipe } from "../../core/services/locale.service";
+import { ProgressPoint, ProgressSummary } from "../../core/models";
 
 @Component({
   imports: [MatCardModule, TranslatePipe],

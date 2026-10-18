@@ -6,9 +6,9 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
 import { MatChipsModule } from "@angular/material/chips";
 import { MatListModule } from "@angular/material/list";
-import { LocaleService, TranslatePipe } from "../../core/locale.service";
-import { ApiService } from "../../core/api.service";
-import { Dashboard, NOTE_TYPES } from "../../models";
+import { LocaleService, TranslatePipe } from "../../core/services/locale.service";
+import { ApiService } from "../../core/services/api.service";
+import { Dashboard, NOTE_TYPES } from "../../core/models";
 
 @Component({
   imports: [

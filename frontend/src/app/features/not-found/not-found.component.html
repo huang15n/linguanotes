@@ -1,0 +1,10 @@
+<div class="page not-found">
+  <mat-icon aria-hidden="true">travel_explore</mat-icon>
+  <h1>{{ "notFound.title" | t }}</h1>
+  <p class="muted">{{ "notFound.message" | t }}</p>
+  @if (auth.isAuthenticated()) {
+    <a mat-flat-button routerLink="/dashboard">{{ "notFound.back" | t }}</a>
+  } @else {
+    <a mat-flat-button routerLink="/auth/login">{{ "auth.login" | t }}</a>
+  }
+</div>

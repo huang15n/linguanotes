@@ -1,19 +1,21 @@
 import { Routes } from "@angular/router";
-import { authGuard } from "./core/auth.guard";
+import { adminGuard, authGuard } from "./core/guards/auth.guard";
+
 export const routes: Routes = [
-  { path: "", pathMatch: "full", redirectTo: "auth/login" },
-  {
-    path: "auth/:mode",
-    loadComponent: () =>
-      import("./features/auth/auth-page.component").then(
-        (m) => m.AuthPageComponent,
-      ),
-  },
+  { path: "", pathMatch: "full", redirectTo: "dashboard" },
+  // Les routes statiques doivent précéder /auth/:mode.
   {
     path: "auth/reset",
     loadComponent: () =>
       import("./features/auth/password-reset.component").then(
         (m) => m.PasswordResetComponent,
+      ),
+  },
+  {
+    path: "auth/:mode",
+    loadComponent: () =>
+      import("./features/auth/auth-page.component").then(
+        (m) => m.AuthPageComponent,
       ),
   },
   {
@@ -113,10 +115,26 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "files",
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import("./features/files/files.component").then(
+        (m) => m.FilesComponent,
+      ),
+  },
+  {
     path: "ai",
     canActivate: [authGuard],
     loadComponent: () =>
       import("./features/ai/ai.component").then((m) => m.AiComponent),
+  },
+  {
+    path: "admin",
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import("./features/admin/admin-users.component").then(
+        (m) => m.AdminUsersComponent,
+      ),
   },
   {
     path: "settings",
@@ -126,5 +144,11 @@ export const routes: Routes = [
         (m) => m.SettingsComponent,
       ),
   },
-  { path: "**", redirectTo: "" },
+  {
+    path: "**",
+    loadComponent: () =>
+      import("./features/not-found/not-found.component").then(
+        (m) => m.NotFoundComponent,
+      ),
+  },
 ];

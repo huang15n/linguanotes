@@ -11,9 +11,10 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
-import { ApiService } from "../../core/api.service";
-import { LocaleService, TranslatePipe } from "../../core/locale.service";
-import { Language, VocabularyEntry } from "../../models";
+import { ApiService } from "../../core/services/api.service";
+import { LocaleService, TranslatePipe } from "../../core/services/locale.service";
+import { Language, VocabularyEntry } from "../../core/models";
+import { UiService } from "../../shared/dialogs/dialogs";
 
 @Component({
   imports: [
@@ -32,9 +33,11 @@ import { Language, VocabularyEntry } from "../../models";
 export class VocabularyComponent implements OnInit {
   private api = inject(ApiService);
   private locale = inject(LocaleService);
+  private ui = inject(UiService);
   entries = signal<VocabularyEntry[]>([]);
   languages = signal<Language[]>([]);
   editingId = signal<number | null>(null);
+  private editingLessonId = signal<number | null>(null);
   form = new FormGroup({
     sourceLanguageId: new FormControl<number | null>(null, Validators.required),
     targetLanguageId: new FormControl<number | null>(null, Validators.required),
@@ -88,7 +91,7 @@ export class VocabularyComponent implements OnInit {
         .split(",")
         .map((item) => item.trim())
         .filter(Boolean),
-      lessonId: null,
+      lessonId: this.editingLessonId(),
     };
     const id = this.editingId();
     const request = id
@@ -102,6 +105,7 @@ export class VocabularyComponent implements OnInit {
 
   edit(entry: VocabularyEntry) {
     this.editingId.set(entry.id);
+    this.editingLessonId.set(entry.lessonId);
     this.form.patchValue({
       sourceLanguageId: entry.sourceLanguageId,
       targetLanguageId: entry.targetLanguageId,
@@ -118,6 +122,7 @@ export class VocabularyComponent implements OnInit {
 
   cancelEdit() {
     this.editingId.set(null);
+    this.editingLessonId.set(null);
     this.form.reset({
       sourceLanguageId: null,
       targetLanguageId: null,
@@ -133,8 +138,10 @@ export class VocabularyComponent implements OnInit {
   }
 
   remove(entry: VocabularyEntry) {
-    if (!window.confirm(this.locale.translate("vocabulary.deleteConfirm")))
-      return;
-    this.api.deleteVocabulary(entry.id).subscribe(() => this.load());
+    this.ui
+      .confirm(this.locale.translate("vocabulary.deleteConfirm"))
+      .subscribe(() =>
+        this.api.deleteVocabulary(entry.id).subscribe(() => this.load()),
+      );
   }
 }

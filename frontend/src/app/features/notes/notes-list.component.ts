@@ -21,10 +21,10 @@ import {
   switchMap,
   tap,
 } from "rxjs";
-import { ApiService } from "../../core/api.service";
-import { LocaleService, TranslatePipe } from "../../core/locale.service";
+import { ApiService } from "../../core/services/api.service";
+import { LocaleService, TranslatePipe } from "../../core/services/locale.service";
 import { UiService } from "../../shared/dialogs/dialogs";
-import { Note, NoteFilters, NOTE_TYPES } from "../../models";
+import { Note, NoteFilters, NOTE_TYPES } from "../../core/models";
 
 @Component({
   imports: [

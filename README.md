@@ -1,57 +1,124 @@
-# LinguaNotes — Angular 19 + Spring Boot 3 + MySQL 8
+# LinguaNotes
 
-## Option 1 — Tout dans Docker (recommandé)
+Application d'apprentissage des langues : notes structurées, cours, vocabulaire,
+quiz, flashcards avec répétition espacée et assistant IA.
 
-Prérequis : Docker Desktop installé et ouvert. Les valeurs Compose par défaut sont réservées au développement local.
+- **Frontend** : Angular 19, Angular Material, composants standalone, i18n FR/ES/EN/ZH.
+- **Backend** : Spring Boot 3.3, Spring Security (session + CSRF), JPA, Flyway, OpenAPI.
+- **Base de données** : MySQL 8.4.
+- **Déploiement** : Docker Compose (nginx sert le frontend et relaie `/api/`).
 
-    docker compose up --build
+## Démarrage rapide (Docker)
 
-Puis ouvrir http://localhost:4200 (documentation API : http://localhost:8080/swagger-ui/index.html).
-La première construction prend quelques minutes.
+Prérequis : Docker Desktop.
 
-    docker compose down          # arrêter (les données sont conservées)
-    docker compose down -v       # arrêter ET supprimer la base de données
-    docker compose logs -f backend
+```bash
+docker compose up --build
+```
 
-Ports : 4200 (application), 8080 (API), 3307 (MySQL depuis l’hôte). MySQL et les documents importés utilisent des volumes Docker persistants.
-Si le port 8080 ou 4200 est déjà utilisé, arrêtez l'ancien backend/frontend local.
+- Application : http://localhost:4200
+- Documentation API : http://localhost:8080/swagger-ui/index.html
 
-Copiez `.env.example` vers `.env` et remplacez les valeurs avant tout déploiement. Définissez `COOKIE_SECURE=true` derrière HTTPS. Pour créer le premier administrateur, définissez `BOOTSTRAP_ADMIN_EMAIL` et `BOOTSTRAP_ADMIN_PASSWORD` (12 caractères minimum) au premier démarrage; l’inscription publique ne permet jamais de choisir un rôle privilégié.
+La première construction prend quelques minutes. Les données MySQL et les
+fichiers importés sont conservés dans des volumes Docker.
 
-## Option 2 — Développement local
+```bash
+docker compose down       # arrêter (données conservées)
+docker compose down -v    # arrêter et supprimer la base
+docker compose logs -f backend
+```
 
-    docker compose up -d mysql                # ou votre MySQL local, configuré par DB_URL
-    cd backend  && mvn spring-boot:run        # Java 17+, http://localhost:8080
-    cd frontend && npm install && npm start   # Node 20.19+ / 22, http://localhost:4200
+## Développement local
 
-Le backend lit `DB_URL`, `DB_USER`, `DB_PASSWORD`, `COOKIE_SECURE` et `FILE_STORAGE_DIR`. `SMTP_*` active la réinitialisation par courriel. `AI_API_KEY` active l’assistant IA côté serveur; sans clé, les endpoints IA renvoient une indisponibilité explicite.
+Prérequis : Java 17+, Maven 3.9+, Node 20.19+/22+, MySQL 8 (ou Docker).
 
-## Fonctionnalités disponibles
+```bash
+# 1. Base de données
+docker compose up -d mysql
 
-- Interface française, espagnole, anglaise et chinoise simplifiée; préférence d’interface et objectif quotidien par compte.
-- Inscription, connexion/déconnexion par session cookie HttpOnly avec protection CSRF, modification du profil et du mot de passe.
-- Rôles `USER`, `TEACHER`, `ADMIN`; rôle administrateur initial facultatif via variables de bootstrap.
-- Notes privées et hiérarchie cours → unités → leçons, avec filtrage de propriété côté backend.
-- Vocabulaire multilingue avec exemples, IPA, étiquettes et difficulté.
-- Quiz corrigés côté serveur, historique des tentatives, flashcards, révision espacée et progression.
-- Import PDF textuel, DOCX, XLSX et XLS avec aperçu avant confirmation; maximum 20 Mo. Les PDF scannés nécessitent encore un OCR.
-- Stockage fichier privé par compte et téléchargements autorisés par propriétaire.
-- Assistant IA compatible OpenAI côté serveur, limité à 20 générations par utilisateur et par jour; les résultats sont des brouillons à vérifier.
+# 2. API (http://localhost:8080)
+cd backend
+mvn spring-boot:run
+
+# 3. Frontend (http://localhost:4200)
+cd frontend
+npm ci
+npm start
+```
+
+Le proxy Angular (`proxy.conf.json`) relaie `/api` vers le backend ; aucun CORS
+n'est nécessaire en développement.
+
+### Vérifications
+
+```bash
+cd backend  && mvn test
+cd frontend && npm run build
+```
+
+## Configuration
+
+Copiez `.env.example` vers `.env` et adaptez les valeurs. Les valeurs par défaut
+sont réservées au développement local.
+
+| Variable | Rôle | Défaut |
+| --- | --- | --- |
+| `DB_URL` | URL JDBC MySQL | `jdbc:mysql://localhost:3306/linguanotes_app...` |
+| `DB_USER` / `DB_PASSWORD` | Identifiants MySQL | `linguanotes` / `lingua-local-only` |
+| `COOKIE_SECURE` | Cookie de session HTTPS uniquement | `false` |
+| `APP_PUBLIC_URL` | URL publique (liens de réinitialisation) | `http://localhost:4200` |
+| `FILE_STORAGE_DIR` | Stockage privé des fichiers | `./data/files` |
+| `AI_API_KEY` | Clé OpenAI-compatible ; vide = IA désactivée | — |
+| `SMTP_*` | Envoi des courriels de réinitialisation | — |
+| `BOOTSTRAP_ADMIN_EMAIL` / `_PASSWORD` | Création du premier administrateur | — |
+
+Définissez `COOKIE_SECURE=true` derrière HTTPS. Le compte administrateur initial
+n'est créé que si l'adresse n'existe pas déjà ; le mot de passe doit contenir au
+moins 12 caractères.
+
+## Fonctionnalités
+
+- Inscription, connexion/déconnexion par session HttpOnly avec protection CSRF.
+- Rôles `USER`, `TEACHER`, `ADMIN` et page d'administration des comptes.
+- Notes privées (Markdown, langue, leçon, étiquettes, favoris) avec recherche.
+- Hiérarchie cours → unités → leçons.
+- Vocabulaire multilingue (IPA, exemples, étiquettes, difficulté).
+- Quiz multi-questions corrigés côté serveur, historique des tentatives.
+- Flashcards, révision espacée (SM-2 simplifié) et progression.
+- Import PDF textuel, DOCX, XLSX et XLS avec aperçu avant confirmation.
+- Gestion des fichiers privés (documents et audio), téléchargement contrôlé.
+- Assistant IA compatible OpenAI, limité à 20 générations par utilisateur/jour.
+- Interface FR/ES/EN/ZH-CN, thème clair/sombre, objectif quotidien.
 - Export JSON et suppression de compte.
-- Migrations MySQL Flyway versionnées, validation Hibernate au démarrage et OpenAPI/Swagger.
+- Migrations Flyway, validation Hibernate et OpenAPI/Swagger.
 
-## Organisation backend
+## Structure du dépôt
 
-    controller/  contrôleurs REST
-    service/     logique métier
-    repository/  accès Spring Data JPA
-    model/       entités et enums
-    security/    principal et sessions
-    config/      sécurité, configuration et initialisation
-    dto/         contrats d’API
+```
+backend/                  API Spring Boot
+  src/main/java/com/linguanotes/
+    config/               Sécurité, CORS, OpenAPI, données initiales
+    controller/           Contrôleurs REST par ressource
+    dto/                  Un record par contrat d'API
+    error/                Gestion globale des exceptions
+    model/                Entités JPA et énumérations
+    repository/           Spring Data JPA
+    security/             Principal et UserDetailsService
+    service/              Logique métier
+  src/main/resources/db/migration/   Migrations Flyway
+  src/test/               Tests unitaires
 
-## Structure
+frontend/                 Application Angular
+  src/app/
+    core/                 Guards, i18n, interceptors, modèles, services
+    shared/               Dialogues et éditeur Markdown
+    features/             Un dossier par fonctionnalité
+    app.routes.ts         Routage lazy-loading
+    app.config.ts         Providers, CSRF, initialisation
 
-    backend/   API REST Spring Boot, migrations Flyway, stockage privé + Dockerfile
-    frontend/  Angular + Angular Material, i18n, routes protégées et pages par fonctionnalité
-    docker-compose.yml
+docs/ARCHITECTURE.md      Conventions détaillées
+docker-compose.yml        MySQL + backend + frontend
+```
+
+Les conventions de code et l'organisation détaillée sont décrites dans
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

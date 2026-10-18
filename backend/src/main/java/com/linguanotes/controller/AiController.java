@@ -1,7 +1,7 @@
 package com.linguanotes.controller;
 
-import com.linguanotes.dto.Dto.AiGenerationResponse;
-import com.linguanotes.dto.Dto.AiRequest;
+import com.linguanotes.dto.AiGenerationResponse;
+import com.linguanotes.dto.AiRequest;
 import com.linguanotes.security.AccountPrincipal;
 import com.linguanotes.service.AiService;
 import jakarta.validation.Valid;

@@ -37,7 +37,15 @@
       </mat-card>
       <h2>{{ "review.cards" | t }}</h2>
       @for (card of cards(); track card.flashcardId) {
-        <div class="card-row"><strong>{{ card.frontText }}</strong><span class="muted">{{ card.backText }}</span></div>
+        <div class="card-row">
+          <div class="card-text">
+            <strong>{{ card.frontText }}</strong>
+            <span class="muted">{{ card.backText }}</span>
+          </div>
+          <button mat-icon-button type="button" (click)="remove(card)" [attr.aria-label]="'common.delete' | t">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
       } @empty { <p class="muted">{{ "review.noCards" | t }}</p> }
     </section>
   </div>

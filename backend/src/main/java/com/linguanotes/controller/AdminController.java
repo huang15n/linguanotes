@@ -1,10 +1,12 @@
 package com.linguanotes.controller;
 
-import com.linguanotes.dto.Dto.AccountResponse;
-import com.linguanotes.dto.Dto.RoleUpdateRequest;
+import com.linguanotes.dto.AccountResponse;
+import com.linguanotes.dto.RoleUpdateRequest;
 import com.linguanotes.service.AccountService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/users")
@@ -13,6 +15,11 @@ public class AdminController {
 
     public AdminController(AccountService accounts) {
         this.accounts = accounts;
+    }
+
+    @GetMapping
+    public List<AccountResponse> list() {
+        return accounts.listAccounts();
     }
 
     @PutMapping("/{id}/role")

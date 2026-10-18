@@ -1,4 +1,6 @@
 target
+data
 .idea
 *.iml
 .git
+.env

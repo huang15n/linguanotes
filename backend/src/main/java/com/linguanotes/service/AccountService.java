@@ -1,6 +1,6 @@
 package com.linguanotes.service;
 
-import com.linguanotes.dto.Dto.*;
+import com.linguanotes.dto.*;
 import com.linguanotes.model.AccountRole;
 import com.linguanotes.model.PasswordResetToken;
 import com.linguanotes.model.UserAccount;
@@ -24,6 +24,7 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -75,6 +76,11 @@ public class AccountService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Session expirée")));
     }
 
+    @Transactional(readOnly = true)
+    public List<AccountResponse> listAccounts() {
+        return accounts.findAll().stream().map(this::response).toList();
+    }
+
     @Transactional
     public AccountResponse updateProfile(Long id, ProfileUpdateRequest request) {
         UserAccount account = findAccount(id);
@@ -107,6 +113,11 @@ public class AccountService {
     @Transactional
     public AccountResponse updateRole(Long id, AccountRole role) {
         UserAccount account = findAccount(id);
+        if (account.getRole() == AccountRole.ADMIN && role != AccountRole.ADMIN
+                && accounts.countByRole(AccountRole.ADMIN) <= 1) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Au moins un administrateur doit conserver ce rôle");
+        }
         account.setRole(role);
         return response(accounts.save(account));
     }
@@ -132,7 +143,6 @@ public class AccountService {
         token.setUser(account);
         resetTokens.save(token);
 
-        if (mailHost.isBlank()) return;
         try {
             sendResetEmail(mailSenders.getObject(), account, rawToken);
         } catch (MailException | MessagingException e) {

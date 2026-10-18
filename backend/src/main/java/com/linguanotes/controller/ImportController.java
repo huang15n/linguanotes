@@ -1,7 +1,7 @@
 package com.linguanotes.controller;
 
-import com.linguanotes.dto.Dto.ConfirmImportRequest;
-import com.linguanotes.dto.Dto.ImportJobResponse;
+import com.linguanotes.dto.ConfirmImportRequest;
+import com.linguanotes.dto.ImportJobResponse;
 import com.linguanotes.security.AccountPrincipal;
 import com.linguanotes.service.ImportService;
 import jakarta.validation.Valid;

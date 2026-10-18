@@ -11,9 +11,9 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
-import { ApiService } from "../../core/api.service";
-import { TranslatePipe } from "../../core/locale.service";
-import { Course, ImportJob, Language } from "../../models";
+import { ApiService } from "../../core/services/api.service";
+import { TranslatePipe } from "../../core/services/locale.service";
+import { Course, ImportJob, Language } from "../../core/models";
 
 @Component({
   imports: [

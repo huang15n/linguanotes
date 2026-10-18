@@ -1,6 +1,7 @@
 import { DatePipe } from "@angular/common";
 import { Component, OnInit, inject, signal } from "@angular/core";
 import {
+  FormArray,
   FormControl,
   FormGroup,
   ReactiveFormsModule,
@@ -12,9 +13,25 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
-import { ApiService } from "../../core/api.service";
-import { TranslatePipe } from "../../core/locale.service";
-import { Exercise, ExerciseResult } from "../../models";
+import { ApiService } from "../../core/services/api.service";
+import {
+  LocaleService,
+  TranslatePipe,
+} from "../../core/services/locale.service";
+import {
+  Exercise,
+  ExerciseAttemptSummary,
+  ExerciseResult,
+} from "../../core/models";
+import { UiService } from "../../shared/dialogs/dialogs";
+
+type QuestionForm = FormGroup<{
+  prompt: FormControl<string>;
+  options: FormControl<string>;
+  expectedAnswer: FormControl<string>;
+  explanation: FormControl<string>;
+  points: FormControl<number>;
+}>;
 
 @Component({
   imports: [
@@ -33,22 +50,13 @@ import { Exercise, ExerciseResult } from "../../models";
 })
 export class ExercisesComponent implements OnInit {
   private api = inject(ApiService);
+  private locale = inject(LocaleService);
+  private ui = inject(UiService);
   exercises = signal<Exercise[]>([]);
   selected = signal<Exercise | null>(null);
   result = signal<ExerciseResult | null>(null);
-  history = signal<
-    {
-      id: number;
-      exerciseId: number;
-      exerciseTitle: string;
-      score: number;
-      attemptedAt: string;
-    }[]
-  >([]);
-  answer = new FormControl("", {
-    nonNullable: true,
-    validators: [Validators.required],
-  });
+  history = signal<ExerciseAttemptSummary[]>([]);
+  answers = new FormArray<FormControl<string>>([]);
   createForm = new FormGroup({
     title: new FormControl("", {
       nonNullable: true,
@@ -59,20 +67,42 @@ export class ExercisesComponent implements OnInit {
       validators: [Validators.required],
     }),
     type: new FormControl("MULTIPLE_CHOICE", { nonNullable: true }),
-    prompt: new FormControl("", {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
-    options: new FormControl("", { nonNullable: true }),
-    expectedAnswer: new FormControl("", {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
-    explanation: new FormControl("", { nonNullable: true }),
+    questions: new FormArray<QuestionForm>([this.questionGroup()]),
   });
+
+  get questions() {
+    return this.createForm.controls.questions;
+  }
 
   ngOnInit() {
     this.api.exercises().subscribe((items) => this.exercises.set(items));
+  }
+
+  private questionGroup(): QuestionForm {
+    return new FormGroup({
+      prompt: new FormControl("", {
+        nonNullable: true,
+        validators: [Validators.required],
+      }),
+      options: new FormControl("", { nonNullable: true }),
+      expectedAnswer: new FormControl("", {
+        nonNullable: true,
+        validators: [Validators.required],
+      }),
+      explanation: new FormControl("", { nonNullable: true }),
+      points: new FormControl(1, {
+        nonNullable: true,
+        validators: [Validators.min(1), Validators.max(100)],
+      }),
+    });
+  }
+
+  addQuestion() {
+    this.questions.push(this.questionGroup());
+  }
+
+  removeQuestion(index: number) {
+    if (this.questions.length > 1) this.questions.removeAt(index);
   }
 
   create() {
@@ -87,18 +117,16 @@ export class ExercisesComponent implements OnInit {
         instructions: value.instructions.trim(),
         lessonId: null,
         type: value.type,
-        questions: [
-          {
-            prompt: value.prompt.trim(),
-            options: value.options
-              .split("\n")
-              .map((option) => option.trim())
-              .filter(Boolean),
-            answer: value.expectedAnswer.trim(),
-            explanation: value.explanation.trim(),
-            points: 1,
-          },
-        ],
+        questions: value.questions.map((question) => ({
+          prompt: question.prompt.trim(),
+          options: question.options
+            .split("\n")
+            .map((option) => option.trim())
+            .filter(Boolean),
+          answer: question.expectedAnswer.trim(),
+          explanation: question.explanation.trim(),
+          points: question.points,
+        })),
       })
       .subscribe((exercise) => {
         this.exercises.update((items) => [exercise, ...items]);
@@ -107,18 +135,24 @@ export class ExercisesComponent implements OnInit {
           title: "",
           instructions: "",
           type: "MULTIPLE_CHOICE",
-          prompt: "",
-          options: "",
-          expectedAnswer: "",
-          explanation: "",
         });
+        this.questions.clear();
+        this.questions.push(this.questionGroup());
       });
   }
 
   select(exercise: Exercise) {
     this.selected.set(exercise);
     this.result.set(null);
-    this.answer.reset("");
+    this.answers.clear();
+    for (const question of exercise.questions) {
+      this.answers.push(
+        new FormControl("", {
+          nonNullable: true,
+          validators: [Validators.required],
+        }),
+      );
+    }
     this.api
       .exerciseAttempts(exercise.id)
       .subscribe((items) => this.history.set(items));
@@ -126,12 +160,40 @@ export class ExercisesComponent implements OnInit {
 
   submit() {
     const exercise = this.selected();
-    if (!exercise || this.answer.invalid) {
-      this.answer.markAsTouched();
+    if (!exercise) return;
+    if (this.answers.invalid) {
+      this.answers.markAllAsTouched();
       return;
     }
     this.api
-      .submitExercise(exercise.id, [this.answer.value])
-      .subscribe((result) => this.result.set(result));
+      .submitExercise(exercise.id, this.answers.getRawValue())
+      .subscribe((result) => {
+        this.result.set(result);
+        this.api
+          .exerciseAttempts(exercise.id)
+          .subscribe((items) => this.history.set(items));
+      });
+  }
+
+  removeExercise() {
+    const exercise = this.selected();
+    if (!exercise) return;
+    this.ui
+      .confirm(
+        this.locale
+          .translate("exercises.deleteConfirm")
+          .replace("{title}", exercise.title),
+      )
+      .subscribe(() =>
+        this.api.deleteExercise(exercise.id).subscribe(() => {
+          this.exercises.update((items) =>
+            items.filter((item) => item.id !== exercise.id),
+          );
+          this.selected.set(null);
+          this.result.set(null);
+          this.history.set([]);
+          this.ui.toast(this.locale.translate("exercises.deleted"));
+        }),
+      );
   }
 }

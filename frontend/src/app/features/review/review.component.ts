@@ -10,9 +10,13 @@ import { MatCardModule } from "@angular/material/card";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
-import { ApiService } from "../../core/api.service";
-import { TranslatePipe } from "../../core/locale.service";
-import { DueCard } from "../../models";
+import { ApiService } from "../../core/services/api.service";
+import {
+  LocaleService,
+  TranslatePipe,
+} from "../../core/services/locale.service";
+import { DueCard } from "../../core/models";
+import { UiService } from "../../shared/dialogs/dialogs";
 
 @Component({
   imports: [
@@ -29,6 +33,8 @@ import { DueCard } from "../../models";
 })
 export class ReviewComponent implements OnInit {
   private api = inject(ApiService);
+  private locale = inject(LocaleService);
+  private ui = inject(UiService);
   due = signal<DueCard[]>([]);
   cards = signal<DueCard[]>([]);
   current = signal<DueCard | null>(null);
@@ -80,6 +86,21 @@ export class ReviewComponent implements OnInit {
     this.api
       .answerCard(current.flashcardId, rating)
       .subscribe(() => this.load());
+  }
+
+  remove(card: DueCard) {
+    this.ui
+      .confirm(
+        this.locale
+          .translate("common.deleteConfirm")
+          .replace("{name}", card.frontText),
+      )
+      .subscribe(() =>
+        this.api.deleteFlashcard(card.flashcardId).subscribe(() => {
+          this.ui.toast(this.locale.translate("common.deleted"));
+          this.load();
+        }),
+      );
   }
 
   create() {

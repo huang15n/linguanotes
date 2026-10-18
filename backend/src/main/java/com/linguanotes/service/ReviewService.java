@@ -1,6 +1,6 @@
 package com.linguanotes.service;
 
-import com.linguanotes.dto.Dto.*;
+import com.linguanotes.dto.*;
 import com.linguanotes.model.*;
 import com.linguanotes.repository.*;
 import org.springframework.http.HttpStatus;
@@ -63,6 +63,18 @@ public class ReviewService {
         return map(card);
     }
 
+    public FlashcardResponse updateCard(Long ownerId, Long id, FlashcardRequest request) {
+        Flashcard card = findCard(ownerId, id);
+        card.setLesson(request.lessonId() == null ? null : ownedLesson(ownerId, request.lessonId()));
+        VocabularyEntry entry = request.vocabularyEntryId() == null ? null
+                : vocabulary.findByIdAndOwnerId(request.vocabularyEntryId(), ownerId)
+                .orElseThrow(() -> notFound("Fiche de vocabulaire introuvable"));
+        card.setVocabularyEntry(entry);
+        card.setFrontText(entry == null ? request.frontText().trim() : entry.getSourceText());
+        card.setBackText(entry == null ? request.backText().trim() : entry.getTranslation());
+        return map(cards.save(card));
+    }
+
     public void deleteCard(Long ownerId, Long id) {
         cards.delete(findCard(ownerId, id));
     }
@@ -74,9 +86,15 @@ public class ReviewService {
     }
 
     public ReviewResult answer(Long ownerId, Long cardId, ReviewRating rating) {
-        findCard(ownerId, cardId);
+        Flashcard card = findCard(ownerId, cardId);
         ReviewProgress schedule = progress.findByUserIdAndFlashcardId(ownerId, cardId)
-                .orElseThrow(() -> notFound("Progression de révision introuvable"));
+                .orElseGet(() -> {
+                    ReviewProgress created = new ReviewProgress();
+                    created.setUser(accounts.getReferenceById(ownerId));
+                    created.setFlashcard(card);
+                    created.setNextDueAt(LocalDateTime.now());
+                    return created;
+                });
         LocalDateTime now = LocalDateTime.now();
         int repetitions = schedule.getRepetitions();
         double ease = schedule.getEaseFactor().doubleValue();

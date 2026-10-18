@@ -4,7 +4,8 @@
  "scripts": {
   "ng": "ng",
   "start": "ng serve --proxy-config proxy.conf.json",
-  "build": "ng build"
+  "build": "ng build",
+  "typecheck": "tsc -p tsconfig.app.json --noEmit"
  },
  "dependencies": {
   "@angular/animations": "^19.2.0",

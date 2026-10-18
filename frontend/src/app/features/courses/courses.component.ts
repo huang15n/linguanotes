@@ -11,9 +11,11 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
-import { ApiService } from "../../core/api.service";
-import { LocaleService, TranslatePipe } from "../../core/locale.service";
-import { Course, Language, Lesson, Unit } from "../../models";
+import { Observable, tap } from "rxjs";
+import { ApiService } from "../../core/services/api.service";
+import { LocaleService, TranslatePipe } from "../../core/services/locale.service";
+import { Course, Language, Lesson, Unit } from "../../core/models";
+import { UiService } from "../../shared/dialogs/dialogs";
 
 @Component({
   imports: [
@@ -32,6 +34,7 @@ import { Course, Language, Lesson, Unit } from "../../models";
 export class CoursesComponent implements OnInit {
   private api = inject(ApiService);
   private locale = inject(LocaleService);
+  private ui = inject(UiService);
   courses = signal<Course[]>([]);
   languages = signal<Language[]>([]);
   selectedCourse = signal<Course | null>(null);
@@ -147,6 +150,68 @@ export class CoursesComponent implements OnInit {
         this.lessons.update((items) => [...items, lesson]);
         this.lessonForm.reset({ title: "", content: "" });
       });
+  }
+
+  removeCourse() {
+    const course = this.selectedCourse();
+    if (!course) return;
+    this.confirmDelete(course.title, () =>
+      this.api.deleteCourse(course.id).pipe(
+        tap(() => {
+          this.courses.update((items) =>
+            items.filter((item) => item.id !== course.id),
+          );
+          this.selectedCourse.set(null);
+          this.units.set([]);
+          this.selectedUnit.set(null);
+          this.lessons.set([]);
+        }),
+      ),
+    );
+  }
+
+  removeUnit(unit: Unit) {
+    const course = this.selectedCourse();
+    if (!course) return;
+    this.confirmDelete(unit.title, () =>
+      this.api.deleteUnit(course.id, unit.id).pipe(
+        tap(() => {
+          this.units.update((items) =>
+            items.filter((item) => item.id !== unit.id),
+          );
+          if (this.selectedUnit()?.id === unit.id) {
+            this.selectedUnit.set(null);
+            this.lessons.set([]);
+          }
+        }),
+      ),
+    );
+  }
+
+  removeLesson(lesson: Lesson) {
+    const unit = this.selectedUnit();
+    if (!unit) return;
+    this.confirmDelete(lesson.title, () =>
+      this.api.deleteLesson(unit.id, lesson.id).pipe(
+        tap(() =>
+          this.lessons.update((items) =>
+            items.filter((item) => item.id !== lesson.id),
+          ),
+        ),
+      ),
+    );
+  }
+
+  private confirmDelete(name: string, action: () => Observable<unknown>) {
+    this.ui
+      .confirm(
+        this.locale.translate("common.deleteConfirm").replace("{name}", name),
+      )
+      .subscribe(() =>
+        action().subscribe(() =>
+          this.ui.toast(this.locale.translate("common.deleted")),
+        ),
+      );
   }
 
   statusLabel(status: string) {

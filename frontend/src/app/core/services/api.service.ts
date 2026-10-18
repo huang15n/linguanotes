@@ -2,23 +2,27 @@ import { Injectable, inject } from "@angular/core";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import {
   Account,
+  AiGeneration,
+  Course,
   Dashboard,
+  DueCard,
+  Exercise,
+  ExerciseAttemptSummary,
+  ExerciseResult,
+  Flashcard,
+  ImportJob,
   Language,
+  Lesson,
   LoginRequest,
   Note,
   NoteFilters,
   NoteRequest,
-  RegisterRequest,
-  Course,
-  AiGeneration,
-  DueCard,
-  Exercise,
-  ExerciseResult,
-  Flashcard,
-  ImportJob,
-  Lesson,
   ProgressPoint,
   ProgressSummary,
+  RegisterRequest,
+  ReviewRating,
+  ReviewResult,
+  StoredFile,
   Unit,
   VocabularyEntry,
 } from "../models";
@@ -39,13 +43,32 @@ export class ApiService {
   courses() {
     return this.http.get<Course[]>(`${this.b}/courses`);
   }
+  course(id: number) {
+    return this.http.get<Course>(`${this.b}/courses/${id}`);
+  }
   createCourse(body: {
     title: string;
     languageId: number;
     level: string | null;
     description: string | null;
+    status?: Course["status"];
   }) {
     return this.http.post<Course>(`${this.b}/courses`, body);
+  }
+  updateCourse(
+    id: number,
+    body: {
+      title: string;
+      languageId: number;
+      level: string | null;
+      description: string | null;
+      status: Course["status"];
+    },
+  ) {
+    return this.http.put<Course>(`${this.b}/courses/${id}`, body);
+  }
+  deleteCourse(id: number) {
+    return this.http.delete<void>(`${this.b}/courses/${id}`);
   }
   units(courseId: number) {
     return this.http.get<Unit[]>(`${this.b}/courses/${courseId}/units`);
@@ -55,6 +78,21 @@ export class ApiService {
     body: { title: string; position: number; description: string | null },
   ) {
     return this.http.post<Unit>(`${this.b}/courses/${courseId}/units`, body);
+  }
+  updateUnit(
+    courseId: number,
+    unitId: number,
+    body: { title: string; position: number; description: string | null },
+  ) {
+    return this.http.put<Unit>(
+      `${this.b}/courses/${courseId}/units/${unitId}`,
+      body,
+    );
+  }
+  deleteUnit(courseId: number, unitId: number) {
+    return this.http.delete<void>(
+      `${this.b}/courses/${courseId}/units/${unitId}`,
+    );
   }
   lessons(unitId: number) {
     return this.http.get<Lesson[]>(`${this.b}/units/${unitId}/lessons`);
@@ -69,6 +107,26 @@ export class ApiService {
     },
   ) {
     return this.http.post<Lesson>(`${this.b}/units/${unitId}/lessons`, body);
+  }
+  updateLesson(
+    unitId: number,
+    lessonId: number,
+    body: {
+      title: string;
+      content: string;
+      type: Lesson["type"];
+      position: number;
+    },
+  ) {
+    return this.http.put<Lesson>(
+      `${this.b}/units/${unitId}/lessons/${lessonId}`,
+      body,
+    );
+  }
+  deleteLesson(unitId: number, lessonId: number) {
+    return this.http.delete<void>(
+      `${this.b}/units/${unitId}/lessons/${lessonId}`,
+    );
   }
   vocabulary() {
     return this.http.get<VocabularyEntry[]>(`${this.b}/vocabulary`);
@@ -88,6 +146,12 @@ export class ApiService {
   createExercise(body: object) {
     return this.http.post<Exercise>(`${this.b}/exercises`, body);
   }
+  updateExercise(id: number, body: object) {
+    return this.http.put<Exercise>(`${this.b}/exercises/${id}`, body);
+  }
+  deleteExercise(id: number) {
+    return this.http.delete<void>(`${this.b}/exercises/${id}`);
+  }
   submitExercise(id: number, answers: string[]) {
     return this.http.post<ExerciseResult>(
       `${this.b}/exercises/${id}/attempts`,
@@ -95,15 +159,9 @@ export class ApiService {
     );
   }
   exerciseAttempts(id: number) {
-    return this.http.get<
-      {
-        id: number;
-        exerciseId: number;
-        exerciseTitle: string;
-        score: number;
-        attemptedAt: string;
-      }[]
-    >(`${this.b}/exercises/${id}/attempts`);
+    return this.http.get<ExerciseAttemptSummary[]>(
+      `${this.b}/exercises/${id}/attempts`,
+    );
   }
   flashcards() {
     return this.http.get<Flashcard[]>(`${this.b}/flashcards`);
@@ -111,11 +169,19 @@ export class ApiService {
   createFlashcard(body: object) {
     return this.http.post<Flashcard>(`${this.b}/flashcards`, body);
   }
+  updateFlashcard(id: number, body: object) {
+    return this.http.put<Flashcard>(`${this.b}/flashcards/${id}`, body);
+  }
+  deleteFlashcard(id: number) {
+    return this.http.delete<void>(`${this.b}/flashcards/${id}`);
+  }
   dueCards() {
     return this.http.get<DueCard[]>(`${this.b}/review/due`);
   }
-  answerCard(id: number, rating: "AGAIN" | "HARD" | "GOOD" | "EASY") {
-    return this.http.post(`${this.b}/review/${id}/answer`, { rating });
+  answerCard(id: number, rating: ReviewRating) {
+    return this.http.post<ReviewResult>(`${this.b}/review/${id}/answer`, {
+      rating,
+    });
   }
   progressSummary() {
     return this.http.get<ProgressSummary>(`${this.b}/progress/summary`);
@@ -133,6 +199,26 @@ export class ApiService {
   }
   confirmImport(id: number, body: object) {
     return this.http.post<ImportJob>(`${this.b}/imports/${id}/confirm`, body);
+  }
+  files() {
+    return this.http.get<StoredFile[]>(`${this.b}/files`);
+  }
+  uploadFile(file: File) {
+    const body = new FormData();
+    body.append("file", file);
+    return this.http.post<StoredFile>(`${this.b}/files`, body);
+  }
+  downloadFile(id: number) {
+    return this.http.get(`${this.b}/files/${id}`, { responseType: "blob" });
+  }
+  deleteFile(id: number) {
+    return this.http.delete<void>(`${this.b}/files/${id}`);
+  }
+  adminUsers() {
+    return this.http.get<Account[]>(`${this.b}/admin/users`);
+  }
+  updateUserRole(id: number, role: Account["role"]) {
+    return this.http.put<Account>(`${this.b}/admin/users/${id}/role`, { role });
   }
   ai(kind: "explain" | "generate-exercise" | "enrich-note", body: object) {
     return this.http.post<AiGeneration>(`${this.b}/ai/${kind}`, body);

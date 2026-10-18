@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.linguanotes.dto.Dto.*;
+import com.linguanotes.dto.*;
 import com.linguanotes.model.*;
 import com.linguanotes.repository.*;
 import org.springframework.http.HttpStatus;
@@ -43,13 +43,18 @@ public class ExerciseService {
     public ExerciseResponse create(Long ownerId, ExerciseRequest request) {
         Exercise exercise = new Exercise();
         exercise.setOwner(accounts.getReferenceById(ownerId));
-        exercise.setTitle(request.title().trim());
-        exercise.setInstructions(request.instructions().trim());
-        exercise.setType(request.type());
-        exercise.setLesson(request.lessonId() == null ? null : ownedLesson(ownerId, request.lessonId()));
-        exercise.setQuestionsJson(write(request.questions()));
-        exercise.setExplanationsJson(write(request.questions().stream().map(ExerciseQuestionRequest::explanation).toList()));
+        apply(exercise, ownerId, request);
         return map(exercises.save(exercise));
+    }
+
+    public ExerciseResponse update(Long ownerId, Long id, ExerciseRequest request) {
+        Exercise exercise = findExercise(ownerId, id);
+        apply(exercise, ownerId, request);
+        return map(exercises.save(exercise));
+    }
+
+    public void delete(Long ownerId, Long id) {
+        exercises.delete(findExercise(ownerId, id));
     }
 
     @Transactional(readOnly = true)
@@ -91,11 +96,20 @@ public class ExerciseService {
     @Transactional(readOnly = true)
     public List<ExerciseAttemptSummary> attempts(Long ownerId, Long exerciseId) {
         Exercise exercise = findExercise(ownerId, exerciseId);
-        return attempts.findAllByUserIdOrderByAttemptedAtDesc(ownerId).stream()
-                .filter(attempt -> attempt.getExercise().getId().equals(exerciseId))
+        return attempts.findAllByExerciseIdAndUserIdOrderByAttemptedAtDesc(exerciseId, ownerId).stream()
                 .map(attempt -> new ExerciseAttemptSummary(attempt.getId(), exerciseId, exercise.getTitle(),
                         attempt.getScore(), attempt.getAttemptedAt()))
                 .toList();
+    }
+
+    private void apply(Exercise exercise, Long ownerId, ExerciseRequest request) {
+        exercise.setTitle(request.title().trim());
+        exercise.setInstructions(request.instructions().trim());
+        exercise.setType(request.type());
+        exercise.setLesson(request.lessonId() == null ? null : ownedLesson(ownerId, request.lessonId()));
+        exercise.setQuestionsJson(write(request.questions()));
+        exercise.setExplanationsJson(write(request.questions().stream()
+                .map(ExerciseQuestionRequest::explanation).toList()));
     }
 
     private Exercise findExercise(Long ownerId, Long exerciseId) {

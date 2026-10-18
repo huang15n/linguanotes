@@ -2,10 +2,10 @@ import { Component, inject, OnInit, signal } from "@angular/core";
 import { MatCardModule } from "@angular/material/card";
 import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
-import { ApiService } from "../../core/api.service";
-import { LocaleService, TranslatePipe } from "../../core/locale.service";
+import { ApiService } from "../../core/services/api.service";
+import { LocaleService, TranslatePipe } from "../../core/services/locale.service";
 import { UiService } from "../../shared/dialogs/dialogs";
-import { Language } from "../../models";
+import { Language } from "../../core/models";
 
 @Component({
   imports: [MatCardModule, MatButtonModule, MatIconModule, TranslatePipe],

@@ -1,6 +1,6 @@
 package com.linguanotes.service;
 
-import com.linguanotes.dto.Dto.*;
+import com.linguanotes.dto.*;
 import com.linguanotes.model.Language;
 import com.linguanotes.repository.LanguageRepository;
 import com.linguanotes.repository.NoteRepository;

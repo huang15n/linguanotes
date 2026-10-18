@@ -1,0 +1,43 @@
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+}
+
+.user-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.user-main span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.role-field {
+  width: 180px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .user-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .role-field {
+    width: 100%;
+  }
+}

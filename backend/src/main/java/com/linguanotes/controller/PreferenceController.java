@@ -1,7 +1,7 @@
 package com.linguanotes.controller;
 
-import com.linguanotes.dto.Dto.PreferenceRequest;
-import com.linguanotes.dto.Dto.UserPreferenceResponse;
+import com.linguanotes.dto.PreferenceRequest;
+import com.linguanotes.dto.UserPreferenceResponse;
 import com.linguanotes.security.AccountPrincipal;
 import com.linguanotes.service.PreferenceService;
 import jakarta.validation.Valid;

@@ -1,0 +1,67 @@
+<div class="page">
+  <h1>{{ "files.title" | t }}</h1>
+  <p class="muted">{{ "files.subtitle" | t }}</p>
+
+  <mat-card appearance="outlined" class="upload-card">
+    <mat-card-content>
+      <h2>{{ "files.upload" | t }}</h2>
+      <p class="muted">{{ "files.formats" | t }}</p>
+      <div class="row">
+        <input
+          #fileInput
+          class="file-input"
+          type="file"
+          accept=".pdf,.docx,.xlsx,.xls,.mp3,.wav,.ogg"
+          (change)="chooseFile($event)"
+        />
+        <button
+          mat-flat-button
+          type="button"
+          (click)="upload()"
+          [disabled]="!selectedFile() || busy()"
+        >
+          <mat-icon>upload</mat-icon>
+          {{ "files.upload" | t }}
+        </button>
+      </div>
+      @if (selectedFile(); as file) {
+        <p class="muted">{{ file.name }} · {{ size(file.size) }}</p>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <div class="file-list">
+    @for (file of files(); track file.id) {
+      <article class="file-row">
+        <mat-icon>{{ file.fileKind === "AUDIO" ? "audiotrack" : "description" }}</mat-icon>
+        <div class="file-main">
+          <strong>{{ file.originalName }}</strong>
+          <span class="muted">
+            {{ file.fileKind }} · {{ size(file.fileSize) }} ·
+            {{ file.createdAt | date: "medium" }}
+          </span>
+        </div>
+        <div class="file-actions">
+          <button
+            mat-icon-button
+            type="button"
+            (click)="download(file)"
+            [attr.aria-label]="'files.download' | t"
+          >
+            <mat-icon>download</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            type="button"
+            (click)="remove(file)"
+            [attr.aria-label]="'files.delete' | t"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </article>
+    } @empty {
+      <p class="muted">{{ "files.empty" | t }}</p>
+    }
+  </div>
+</div>

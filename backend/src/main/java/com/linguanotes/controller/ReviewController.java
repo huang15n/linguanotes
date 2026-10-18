@@ -1,6 +1,6 @@
 package com.linguanotes.controller;
 
-import com.linguanotes.dto.Dto.*;
+import com.linguanotes.dto.*;
 import com.linguanotes.security.AccountPrincipal;
 import com.linguanotes.service.ReviewService;
 import jakarta.validation.Valid;
@@ -28,6 +28,12 @@ public class ReviewController {
     public ResponseEntity<FlashcardResponse> createCard(@AuthenticationPrincipal AccountPrincipal principal,
                                                         @Valid @RequestBody FlashcardRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(reviews.createCard(principal.id(), request));
+    }
+
+    @PutMapping("/flashcards/{id}")
+    public FlashcardResponse updateCard(@AuthenticationPrincipal AccountPrincipal principal, @PathVariable Long id,
+                                        @Valid @RequestBody FlashcardRequest request) {
+        return reviews.updateCard(principal.id(), id, request);
     }
 
     @DeleteMapping("/flashcards/{id}")

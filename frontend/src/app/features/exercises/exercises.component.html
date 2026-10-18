@@ -4,16 +4,30 @@
     <section>
       <h2>{{ "exercises.yours" | t }}</h2>
       @for (exercise of exercises(); track exercise.id) {
-        <button class="exercise-choice" [class.selected]="selected()?.id === exercise.id" (click)="select(exercise)">
-          <strong>{{ exercise.title }}</strong><span class="muted">{{ exercise.type }}</span>
+        <button
+          class="exercise-choice"
+          [class.selected]="selected()?.id === exercise.id"
+          (click)="select(exercise)"
+        >
+          <strong>{{ exercise.title }}</strong>
+          <span class="muted">{{ exercise.questions.length }} · {{ exercise.type }}</span>
         </button>
-      } @empty { <p class="muted">{{ "exercises.empty" | t }}</p> }
+      } @empty {
+        <p class="muted">{{ "exercises.empty" | t }}</p>
+      }
+
       <mat-card appearance="outlined" class="create-panel">
         <mat-card-content>
           <h2>{{ "exercises.create" | t }}</h2>
           <form [formGroup]="createForm" (ngSubmit)="create()">
-            <mat-form-field appearance="outline"><mat-label>{{ "exercises.name" | t }}</mat-label><input matInput formControlName="title" /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>{{ "exercises.instructions" | t }}</mat-label><input matInput formControlName="instructions" /></mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "exercises.name" | t }}</mat-label>
+              <input matInput formControlName="title" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "exercises.instructions" | t }}</mat-label>
+              <input matInput formControlName="instructions" />
+            </mat-form-field>
             <mat-form-field appearance="outline">
               <mat-label>{{ "exercises.type" | t }}</mat-label>
               <mat-select formControlName="type">
@@ -22,49 +36,124 @@
                 <mat-option value="TRANSLATION">{{ "exercises.translation" | t }}</mat-option>
               </mat-select>
             </mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>{{ "exercises.question" | t }}</mat-label><textarea matInput rows="2" formControlName="prompt"></textarea></mat-form-field>
-            @if (createForm.controls.type.value === "MULTIPLE_CHOICE") {
-              <mat-form-field appearance="outline"><mat-label>{{ "exercises.options" | t }}</mat-label><textarea matInput rows="3" formControlName="options"></textarea></mat-form-field>
-            }
-            <mat-form-field appearance="outline"><mat-label>{{ "exercises.expectedAnswer" | t }}</mat-label><input matInput formControlName="expectedAnswer" /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>{{ "exercises.explanation" | t }}</mat-label><textarea matInput rows="2" formControlName="explanation"></textarea></mat-form-field>
-            <button mat-flat-button type="submit">{{ "exercises.create" | t }}</button>
+
+            <div formArrayName="questions">
+              @for (question of questions.controls; track $index) {
+                <fieldset class="question-editor" [formGroupName]="$index">
+                  <legend>
+                    {{ "exercises.questionNumber" | t }}
+                    {{ $index + 1 }}
+                  </legend>
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ "exercises.question" | t }}</mat-label>
+                    <textarea matInput rows="2" formControlName="prompt"></textarea>
+                  </mat-form-field>
+                  @if (createForm.controls.type.value === "MULTIPLE_CHOICE") {
+                    <mat-form-field appearance="outline">
+                      <mat-label>{{ "exercises.options" | t }}</mat-label>
+                      <textarea matInput rows="2" formControlName="options"></textarea>
+                    </mat-form-field>
+                  }
+                  <div class="question-row">
+                    <mat-form-field appearance="outline" class="grow">
+                      <mat-label>{{ "exercises.expectedAnswer" | t }}</mat-label>
+                      <input matInput formControlName="expectedAnswer" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="points-field">
+                      <mat-label>Points</mat-label>
+                      <input matInput type="number" min="1" max="100" formControlName="points" />
+                    </mat-form-field>
+                  </div>
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ "exercises.explanation" | t }}</mat-label>
+                    <textarea matInput rows="2" formControlName="explanation"></textarea>
+                  </mat-form-field>
+                  <button
+                    mat-button
+                    type="button"
+                    (click)="removeQuestion($index)"
+                    [disabled]="questions.length === 1"
+                  >
+                    <mat-icon>delete</mat-icon>
+                    {{ "exercises.removeQuestion" | t }}
+                  </button>
+                </fieldset>
+              }
+            </div>
+
+            <div class="row">
+              <button mat-button type="button" (click)="addQuestion()">
+                <mat-icon>add</mat-icon>
+                {{ "exercises.addQuestion" | t }}
+              </button>
+              <button mat-flat-button type="submit">{{ "exercises.create" | t }}</button>
+            </div>
           </form>
         </mat-card-content>
       </mat-card>
     </section>
+
     <section>
       @if (selected(); as exercise) {
         <mat-card appearance="outlined" class="quiz-panel">
           <mat-card-content>
-            <h2>{{ exercise.title }}</h2>
+            <div class="quiz-heading">
+              <h2>{{ exercise.title }}</h2>
+              <button mat-icon-button type="button" (click)="removeExercise()" [attr.aria-label]="'exercises.delete' | t">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
             <p>{{ exercise.instructions }}</p>
-            @for (question of exercise.questions; track $index) {
-              <h3>{{ question.prompt }}</h3>
-              @if (question.options.length) {
-                <mat-form-field appearance="outline"><mat-label>{{ "exercises.answer" | t }}</mat-label>
-                  <mat-select [formControl]="answer">@for (option of question.options; track option) { <mat-option [value]="option">{{ option }}</mat-option> }</mat-select>
-                </mat-form-field>
-              } @else {
-                <mat-form-field appearance="outline"><mat-label>{{ "exercises.answer" | t }}</mat-label><input matInput [formControl]="answer" /></mat-form-field>
+            <form (ngSubmit)="submit()">
+              @for (question of exercise.questions; track $index) {
+                <h3>{{ $index + 1 }}. {{ question.prompt }}</h3>
+                @if (question.options.length) {
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ "exercises.answer" | t }}</mat-label>
+                    <mat-select [formControl]="answers.controls[$index]">
+                      @for (option of question.options; track option) {
+                        <mat-option [value]="option">{{ option }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                } @else {
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ "exercises.answer" | t }}</mat-label>
+                    <input matInput [formControl]="answers.controls[$index]" />
+                  </mat-form-field>
+                }
               }
-            }
-            <button mat-flat-button (click)="submit()">{{ "exercises.check" | t }}</button>
+              <button mat-flat-button type="submit">{{ "exercises.check" | t }}</button>
+            </form>
+
             @if (result(); as attempt) {
               <div class="result" role="status">
                 <strong>{{ "exercises.score" | t }}: {{ attempt.score }}%</strong>
                 @for (item of attempt.results; track item.index) {
-                  <p>{{ item.correct ? ("exercises.correct" | t) : ("exercises.incorrect" | t) }} {{ item.expectedAnswer }}</p>
-                  @if (item.explanation) { <p>{{ item.explanation }}</p> }
+                  <p>
+                    {{ item.correct ? ("exercises.correct" | t) : ("exercises.incorrect" | t) }}
+                    {{ item.expectedAnswer }}
+                  </p>
+                  @if (item.explanation) {
+                    <p>{{ item.explanation }}</p>
+                  }
                 }
               </div>
             }
           </mat-card-content>
         </mat-card>
+
         <h3>{{ "exercises.history" | t }}</h3>
-        @for (attempt of history(); track attempt.id) { <p class="history-row">{{ attempt.attemptedAt | date: "mediumDate" }} · {{ attempt.score }}%</p> }
-        @empty { <p class="muted">{{ "exercises.noHistory" | t }}</p> }
-      } @else { <p class="muted">{{ "exercises.select" | t }}</p> }
+        @for (attempt of history(); track attempt.id) {
+          <p class="history-row">
+            {{ attempt.attemptedAt | date: "mediumDate" }} · {{ attempt.score }}%
+          </p>
+        } @empty {
+          <p class="muted">{{ "exercises.noHistory" | t }}</p>
+        }
+      } @else {
+        <p class="muted">{{ "exercises.select" | t }}</p>
+      }
     </section>
   </div>
 </div>

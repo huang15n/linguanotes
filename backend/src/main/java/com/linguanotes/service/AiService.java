@@ -1,8 +1,8 @@
 package com.linguanotes.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.linguanotes.dto.Dto.AiGenerationResponse;
-import com.linguanotes.dto.Dto.AiRequest;
+import com.linguanotes.dto.AiGenerationResponse;
+import com.linguanotes.dto.AiRequest;
 import com.linguanotes.model.AiGeneration;
 import com.linguanotes.repository.AiGenerationRepository;
 import com.linguanotes.repository.UserAccountRepository;

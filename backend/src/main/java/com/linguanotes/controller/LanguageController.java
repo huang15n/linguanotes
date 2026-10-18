@@ -1,6 +1,6 @@
 package com.linguanotes.controller;
 
-import com.linguanotes.dto.Dto.*;
+import com.linguanotes.dto.*;
 import com.linguanotes.service.LanguageService;
 import jakarta.validation.Valid;
 import org.springframework.http.*;

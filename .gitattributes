@@ -1,0 +1,8 @@
+# Normalise les fins de ligne dans le dépôt.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.png binary
+*.jpg binary
+*.ico binary
+*.jar binary

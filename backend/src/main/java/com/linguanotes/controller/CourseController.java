@@ -1,6 +1,6 @@
 package com.linguanotes.controller;
 
-import com.linguanotes.dto.Dto.*;
+import com.linguanotes.dto.*;
 import com.linguanotes.security.AccountPrincipal;
 import com.linguanotes.service.CourseService;
 import jakarta.validation.Valid;
