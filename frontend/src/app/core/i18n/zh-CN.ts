@@ -538,4 +538,5 @@ export const messages: Record<string, string> = {
   "auth.lastName": "姓",
   "auth.confirmPassword": "确认密码",
   "auth.passwordMismatch": "两次输入的密码不一致。",
+  "note.class": "关联班级",
 };

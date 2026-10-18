@@ -45,7 +45,7 @@ Règles :
   JSON `{ "message": "..." }` par `GlobalExceptionHandler`.
 - Toute évolution du schéma passe par une migration Flyway versionnée dans
   `src/main/resources/db/migration`. Ne jamais modifier une migration déjà
-  appliquée (V1–V10 existent ; toute suite commence à V11).
+  appliquée (V1–V11 existent ; toute suite commence à V12).
 - Les référentiels transverses (`language_levels`, `tags`) sont exposés par leurs
   propres services ; les notes et le vocabulaire les réutilisent.
 - Les sections de leçon (`lesson_sections`) et les conjugaisons
@@ -54,6 +54,10 @@ Règles :
 - Les notes utilisent une sauvegarde automatique (`PUT /api/notes/{id}/autosave`)
   avec contrôle de version ; les interactions sociales sont isolées dans
   `NoteInteractionService`.
+- Une note de visibilité `CLASS` est lisible par les membres de sa classe
+  (`notes.class_id`) ; la recherche et la lecture vérifient l'appartenance.
+- Le vocabulaire s'exporte et s'importe en CSV côté Angular et en XLSX côté
+  backend (`VocabularyExcelService`), avec une feuille de conjugaisons dédiée.
 - Les entités utilisent Lombok (`@Getter`, `@Setter`, `@NoArgsConstructor`) ;
   pas de logique métier dans les entités.
 

@@ -543,4 +543,5 @@ export const messages: Record<string, string> = {
   "auth.lastName": "Nom",
   "auth.confirmPassword": "Confirmer le mot de passe",
   "auth.passwordMismatch": "Les deux mots de passe ne correspondent pas.",
+  "note.class": "Classe associée",
 };

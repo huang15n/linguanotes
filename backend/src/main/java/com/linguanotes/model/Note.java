@@ -13,6 +13,7 @@ public class Note {
     @Column(columnDefinition = "TEXT") private String content;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "lesson_id") private Lesson lesson;
     @ManyToOne(fetch = FetchType.EAGER) @JoinColumn(name = "language_id") private Language language;
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "class_id") private SchoolClass schoolClass;
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) private NoteType type = NoteType.OTHER;
     @Column(length = 30) private String level;
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) private NoteVisibility visibility = NoteVisibility.PRIVATE;

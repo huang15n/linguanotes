@@ -81,7 +81,8 @@ moins 12 caractères.
 - Inscription, connexion/déconnexion par session HttpOnly avec protection CSRF.
 - Rôles `USER`, `TEACHER`, `ADMIN` et page d'administration des comptes.
 - Notes : Markdown H1–H5, images, sauvegarde automatique avec brouillon local,
-  niveaux par langue, visibilité, étiquettes, favoris, J'aime et commentaires.
+  niveaux par langue, visibilité (privée, publique, classe), étiquettes, favoris,
+  J'aime et commentaires.
 - Référentiel de niveaux par langue : IELTS pour l'anglais, A1–C2 pour le français
   et l'espagnol, traditionnel/simplifié pour le chinois.
 - Cours → unités → leçons → sections pédagogiques flexibles (dialogue, grammaire,
@@ -106,7 +107,7 @@ moins 12 caractères.
 - Gestion des fichiers privés (documents, images et audio), téléchargement contrôlé.
 - Assistant IA compatible OpenAI, limité à 20 générations par utilisateur/jour.
 - Export JSON et suppression de compte.
-- Migrations Flyway V1–V10, validation Hibernate et OpenAPI/Swagger.
+- Migrations Flyway V1–V11, validation Hibernate et OpenAPI/Swagger.
 
 ## Structure du dépôt
 

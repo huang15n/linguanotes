@@ -32,6 +32,8 @@ export interface Note {
   type: NoteType;
   level: string | null;
   visibility: NoteVisibility;
+  classId: number | null;
+  className: string | null;
   authorId: number;
   authorName: string;
   unit: string | null;
@@ -54,6 +56,7 @@ export interface NoteRequest {
   type: NoteType;
   level: string | null;
   visibility: NoteVisibility;
+  classId: number | null;
   unit: string | null;
   tags: string[];
   favorite: boolean;

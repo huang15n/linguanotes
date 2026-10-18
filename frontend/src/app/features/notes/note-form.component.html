@@ -101,6 +101,17 @@
               }
             </mat-select>
           </mat-form-field>
+          @if (form.controls.visibility.value === "CLASS") {
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "note.class" | t }}</mat-label>
+              <mat-select formControlName="classId">
+                <mat-option [value]="null">{{ "common.none" | t }}</mat-option>
+                @for (schoolClass of classes(); track schoolClass.id) {
+                  <mat-option [value]="schoolClass.id">{{ schoolClass.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
           <mat-form-field appearance="outline">
             <mat-label>{{ "note.lesson" | t }}</mat-label>
             <mat-select formControlName="lessonId" [canSelectNullableOptions]="true">

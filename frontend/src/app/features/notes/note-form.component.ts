@@ -40,6 +40,7 @@ import {
   NoteRequest,
   NoteType,
   NoteVisibility,
+  SchoolClass,
   Tag,
 } from "../../core/models";
 
@@ -77,6 +78,7 @@ export class NoteFormComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private ready = false;
   languages = signal<Language[]>([]);
+  classes = signal<SchoolClass[]>([]);
   tagCatalog = signal<Tag[]>([]);
   lessonOptions = signal<{ id: number; label: string }[]>([]);
   saveState = signal<SaveState>("saved");
@@ -103,6 +105,7 @@ export class NoteFormComponent implements OnInit, OnDestroy {
     visibility: new FormControl<NoteVisibility>("PRIVATE", {
       nonNullable: true,
     }),
+    classId: new FormControl<number | null>(null),
     lessonId: new FormControl<number | null>(null),
     type: new FormControl<NoteType>("OTHER", { nonNullable: true }),
     unit: new FormControl("", { nonNullable: true }),
@@ -113,6 +116,7 @@ export class NoteFormComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.api.languages().subscribe((languages) => this.languages.set(languages));
+    this.api.classes().subscribe((classes) => this.classes.set(classes));
     this.api.tags().subscribe((tags) => this.tagCatalog.set(tags));
     this.loadLessonOptions();
 
@@ -133,6 +137,7 @@ export class NoteFormComponent implements OnInit, OnDestroy {
           languageId: note.languageId,
           level: note.level,
           visibility: note.visibility,
+          classId: note.classId,
           lessonId: note.lessonId,
           type: note.type,
           unit: note.unit ?? "",
@@ -217,6 +222,7 @@ export class NoteFormComponent implements OnInit, OnDestroy {
         languageId: note.languageId,
         level: note.level,
         visibility: note.visibility,
+        classId: note.classId,
         lessonId: note.lessonId,
         type: note.type,
         unit: note.unit ?? "",
@@ -245,6 +251,7 @@ export class NoteFormComponent implements OnInit, OnDestroy {
       type: value.type,
       level: value.level,
       visibility: value.visibility,
+      classId: value.classId,
       unit: value.unit.trim() || null,
       tags: value.tags,
       favorite: value.favorite,

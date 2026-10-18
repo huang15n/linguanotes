@@ -13,6 +13,7 @@ public record NoteRequest(@NotBlank @Size(max = 255) String title,
                           NoteType type,
                           @Size(max = 30) String level,
                           NoteVisibility visibility,
+                          Long classId,
                           String unit,
                           Set<String> tags,
                           Boolean favorite) { }

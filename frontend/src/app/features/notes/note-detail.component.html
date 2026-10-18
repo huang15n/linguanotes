@@ -39,6 +39,9 @@
         <span class="pill green">{{ n.level }}</span>
       }
       <span class="pill amber">{{ visibilityLabel(n.visibility) }}</span>
+      @if (n.className) {
+        <span class="pill">{{ n.className }}</span>
+      }
       @for (tag of n.tags; track tag) {
         <span class="pill">#{{ tag }}</span>
       }

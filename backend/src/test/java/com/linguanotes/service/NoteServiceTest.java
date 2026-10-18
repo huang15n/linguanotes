@@ -1,10 +1,12 @@
 package com.linguanotes.service;
 
+import com.linguanotes.repository.ClassMemberRepository;
 import com.linguanotes.repository.LanguageRepository;
 import com.linguanotes.repository.LessonRepository;
 import com.linguanotes.repository.NoteCommentRepository;
 import com.linguanotes.repository.NoteLikeRepository;
 import com.linguanotes.repository.NoteRepository;
+import com.linguanotes.repository.SchoolClassRepository;
 import com.linguanotes.repository.TagRepository;
 import com.linguanotes.repository.UserAccountRepository;
 import org.junit.jupiter.api.Test;
@@ -26,7 +28,8 @@ class NoteServiceTest {
         NoteService service = new NoteService(notes, mock(LanguageRepository.class),
                 mock(TagRepository.class), mock(UserAccountRepository.class),
                 mock(LessonRepository.class), mock(NoteLikeRepository.class),
-                mock(NoteCommentRepository.class));
+                mock(NoteCommentRepository.class), mock(SchoolClassRepository.class),
+                mock(ClassMemberRepository.class));
 
         ResponseStatusException error = assertThrows(ResponseStatusException.class,
                 () -> service.get(41L, 9L));

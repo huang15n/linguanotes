@@ -8,9 +8,12 @@ import com.linguanotes.model.Lesson;
 import com.linguanotes.model.Note;
 import com.linguanotes.model.NoteType;
 import com.linguanotes.model.NoteVisibility;
+import com.linguanotes.model.SchoolClass;
 import com.linguanotes.model.Tag;
+import com.linguanotes.repository.ClassMemberRepository;
 import com.linguanotes.repository.LanguageRepository;
 import com.linguanotes.repository.LessonRepository;
+import com.linguanotes.repository.SchoolClassRepository;
 import com.linguanotes.repository.NoteCommentRepository;
 import com.linguanotes.repository.NoteLikeRepository;
 import com.linguanotes.repository.NoteRepository;
@@ -40,10 +43,13 @@ public class NoteService {
     private final LessonRepository lessons;
     private final NoteLikeRepository likes;
     private final NoteCommentRepository comments;
+    private final SchoolClassRepository classes;
+    private final ClassMemberRepository classMembers;
 
     public NoteService(NoteRepository notes, LanguageRepository languages, TagRepository tags,
                        UserAccountRepository accounts, LessonRepository lessons,
-                       NoteLikeRepository likes, NoteCommentRepository comments) {
+                       NoteLikeRepository likes, NoteCommentRepository comments,
+                       SchoolClassRepository classes, ClassMemberRepository classMembers) {
         this.notes = notes;
         this.languages = languages;
         this.tags = tags;
@@ -51,16 +57,24 @@ public class NoteService {
         this.lessons = lessons;
         this.likes = likes;
         this.comments = comments;
+        this.classes = classes;
+        this.classMembers = classMembers;
     }
 
     @Transactional(readOnly = true)
     public List<NoteResponse> search(Long ownerId, String q, Long languageId, NoteType type,
                                      String unit, String tag, Boolean favorite) {
+        List<Long> accessibleClasses = accessibleClassIds(ownerId);
         Specification<Note> specification = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
-            predicates.add(builder.or(
+            Predicate ownerOrPublic = builder.or(
                     builder.equal(root.get("owner").get("id"), ownerId),
-                    builder.equal(root.get("visibility"), NoteVisibility.PUBLIC)));
+                    builder.equal(root.get("visibility"), NoteVisibility.PUBLIC));
+            Predicate classShared = builder.and(
+                    builder.equal(root.get("visibility"), NoteVisibility.CLASS),
+                    builder.isNotNull(root.get("schoolClass")),
+                    root.get("schoolClass").get("id").in(accessibleClasses));
+            predicates.add(builder.or(ownerOrPublic, classShared));
             if (q != null && !q.isBlank()) {
                 String like = "%" + q.trim().toLowerCase() + "%";
                 predicates.add(builder.or(
@@ -149,7 +163,10 @@ public class NoteService {
     public Note requireReadable(Long id, Long ownerId) {
         Note note = notes.findById(id).orElseThrow(this::notFound);
         boolean readable = note.getOwner().getId().equals(ownerId)
-                || note.getVisibility() == NoteVisibility.PUBLIC;
+                || note.getVisibility() == NoteVisibility.PUBLIC
+                || (note.getVisibility() == NoteVisibility.CLASS
+                    && note.getSchoolClass() != null
+                    && accessibleClassIds(ownerId).contains(note.getSchoolClass().getId()));
         if (!readable) {
             throw notFound();
         }
@@ -167,6 +184,7 @@ public class NoteService {
         note.setType(request.type() == null ? NoteType.OTHER : request.type());
         note.setLevel(request.level() == null || request.level().isBlank() ? null : request.level().trim());
         note.setVisibility(request.visibility() == null ? NoteVisibility.PRIVATE : request.visibility());
+        note.setSchoolClass(request.classId() == null ? null : accessibleClass(ownerId, request.classId()));
         note.setFavorite(Boolean.TRUE.equals(request.favorite()));
         note.setLesson(request.lessonId() == null ? null : ownedLesson(ownerId, request.lessonId()));
         note.setLanguage(request.languageId() == null ? null : languages.findById(request.languageId())
@@ -181,6 +199,26 @@ public class NoteService {
             }
         }
         note.setTags(selectedTags);
+    }
+
+    private SchoolClass accessibleClass(Long ownerId, Long classId) {
+        SchoolClass schoolClass = classes.findById(classId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Classe introuvable"));
+        boolean allowed = schoolClass.getTeacher().getId().equals(ownerId)
+                || classMembers.findBySchoolClassIdAndUserId(classId, ownerId).isPresent();
+        if (!allowed) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Classe introuvable");
+        }
+        return schoolClass;
+    }
+
+    private List<Long> accessibleClassIds(Long userId) {
+        List<Long> ids = new ArrayList<>();
+        classes.findAllByTeacherIdOrderByCreatedAtDesc(userId)
+                .forEach(schoolClass -> ids.add(schoolClass.getId()));
+        classMembers.findAllByUserIdOrderByJoinedAtDesc(userId)
+                .forEach(member -> ids.add(member.getSchoolClass().getId()));
+        return ids;
     }
 
     private Lesson ownedLesson(Long ownerId, Long lessonId) {
@@ -204,6 +242,8 @@ public class NoteService {
                 note.getType(),
                 note.getLevel(),
                 note.getVisibility(),
+                note.getSchoolClass() == null ? null : note.getSchoolClass().getId(),
+                note.getSchoolClass() == null ? null : note.getSchoolClass().getName(),
                 note.getOwner().getId(),
                 note.getOwner().getName(),
                 note.getUnit(),
