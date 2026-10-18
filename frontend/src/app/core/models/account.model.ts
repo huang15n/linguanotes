@@ -20,6 +20,8 @@ export interface Account {
 
 export interface RegisterRequest {
   name: string;
+  firstName?: string | null;
+  lastName?: string | null;
   email: string;
   password: string;
 }

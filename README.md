@@ -88,7 +88,8 @@ moins 12 caractères.
   vocabulaire, phonétique, culture, exercices, référence, révisions…).
 - Vocabulaire enrichi : type grammatical, genre, définition, IPA, exemples,
   synonymes, antonymes, statut d'apprentissage et tableaux de conjugaison.
-- Import/export CSV du vocabulaire avec rapport d'importation.
+- Import/export CSV et Excel (.xlsx) du vocabulaire avec rapport d'importation
+  et feuille de conjugaisons dédiée.
 - Quiz paramétrables : langue, niveau, notion, introduction, statut, seuil de
   réussite, nombre de tentatives et mode aperçu ; correction côté serveur.
 - Révisions : sélection de mots par langue/niveau/statut, cartes, traduction,

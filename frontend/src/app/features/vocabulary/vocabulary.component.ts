@@ -59,6 +59,7 @@ export class VocabularyComponent implements OnInit {
   private locale = inject(LocaleService);
   private ui = inject(UiService);
   readonly importInput = viewChild<ElementRef<HTMLInputElement>>("importInput");
+  readonly excelInput = viewChild<ElementRef<HTMLInputElement>>("excelInput");
   entries = signal<VocabularyEntry[]>([]);
   languages = signal<Language[]>([]);
   editingId = signal<number | null>(null);
@@ -410,6 +411,44 @@ export class VocabularyComponent implements OnInit {
 
   openImport() {
     this.importInput()?.nativeElement.click();
+  }
+
+  openExcelImport() {
+    this.excelInput()?.nativeElement.click();
+  }
+
+  exportExcel() {
+    this.api.exportVocabularyExcel().subscribe((blob) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "linguanotes-vocabulaire.xlsx";
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  importExcel(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.item(0);
+    if (!file) return;
+    this.importing.set(true);
+    this.importReport.set("");
+    this.api.importVocabularyExcel(file).subscribe({
+      next: (report) => {
+        this.importing.set(false);
+        this.importReport.set(
+          `${report.imported} importés, ${report.failed} en erreur` +
+            (report.errors.length ? ` · ${report.errors[0]}` : ""),
+        );
+        this.load();
+        input.value = "";
+      },
+      error: () => {
+        this.importing.set(false);
+        input.value = "";
+      },
+    });
   }
 
   importCsv(event: Event) {

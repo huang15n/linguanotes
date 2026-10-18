@@ -6,6 +6,14 @@
       <p class="subtitle">{{ "vocabulary.subtitle" | t }}</p>
     </div>
     <div class="row">
+      <button mat-flat-button type="button" (click)="exportExcel()">
+        <mat-icon>download</mat-icon>
+        {{ "vocabulary.exportExcel" | t }}
+      </button>
+      <button mat-stroked-button type="button" (click)="openExcelImport()" [disabled]="importing()">
+        <mat-icon>upload</mat-icon>
+        {{ "vocabulary.importExcel" | t }}
+      </button>
       <button mat-stroked-button type="button" (click)="exportCsv()">
         <mat-icon>download</mat-icon>
         {{ "vocabulary.export" | t }}
@@ -15,6 +23,7 @@
         {{ "vocabulary.import" | t }}
       </button>
       <input #importInput type="file" accept=".csv,text/csv" hidden (change)="importCsv($event)" />
+      <input #excelInput type="file" accept=".xlsx,.xls" hidden (change)="importExcel($event)" />
     </div>
   </div>
 

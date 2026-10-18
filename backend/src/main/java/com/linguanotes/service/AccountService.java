@@ -68,6 +68,8 @@ public class AccountService {
         }
         UserAccount account = new UserAccount();
         account.setName(request.name().trim());
+        account.setFirstName(trimToNull(request.firstName() == null ? "" : request.firstName()));
+        account.setLastName(trimToNull(request.lastName() == null ? "" : request.lastName()));
         account.setEmail(email);
         account.setPasswordHash(passwords.encode(request.password()));
         account.setRole(AccountRole.USER);

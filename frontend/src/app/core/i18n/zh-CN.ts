@@ -532,4 +532,10 @@ export const messages: Record<string, string> = {
   "classes.deleteConfirm": "删除班级“{name}”？",
   "classes.deleted": "班级已删除。",
   "classes.codeCopied": "代码已复制。",
+  "vocabulary.exportExcel": "导出 Excel",
+  "vocabulary.importExcel": "导入 Excel",
+  "auth.firstName": "名",
+  "auth.lastName": "姓",
+  "auth.confirmPassword": "确认密码",
+  "auth.passwordMismatch": "两次输入的密码不一致。",
 };

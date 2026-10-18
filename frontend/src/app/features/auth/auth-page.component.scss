@@ -47,3 +47,26 @@ form {
 .switch-mode {
   margin: 4px 0 0;
 }
+
+.name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.auth-page {
+  background:
+    radial-gradient(circle at 15% 18%, rgba(79, 70, 229, 0.16), transparent 34%),
+    radial-gradient(circle at 84% 82%, rgba(139, 92, 246, 0.14), transparent 32%),
+    var(--ln-surface);
+}
+
+.auth-panel {
+  box-shadow: 0 24px 60px rgba(49, 46, 129, 0.16);
+}
+
+@media (max-width: 520px) {
+  .name-row {
+    grid-template-columns: 1fr;
+  }
+}

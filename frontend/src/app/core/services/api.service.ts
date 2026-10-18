@@ -194,6 +194,20 @@ export class ApiService {
   deleteVocabulary(id: number) {
     return this.http.delete<void>(`${this.b}/vocabulary/${id}`);
   }
+  exportVocabularyExcel() {
+    return this.http.get(`${this.b}/vocabulary/export.xlsx`, {
+      responseType: "blob",
+    });
+  }
+  importVocabularyExcel(file: File) {
+    const body = new FormData();
+    body.append("file", file);
+    return this.http.post<{
+      imported: number;
+      failed: number;
+      errors: string[];
+    }>(`${this.b}/vocabulary/import.xlsx`, body);
+  }
   exercises() {
     return this.http.get<Exercise[]>(`${this.b}/exercises`);
   }

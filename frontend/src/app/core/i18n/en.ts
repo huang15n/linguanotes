@@ -534,4 +534,10 @@ export const messages: Record<string, string> = {
   "classes.deleteConfirm": "Delete the class “{name}”?",
   "classes.deleted": "Class deleted.",
   "classes.codeCopied": "Code copied.",
+  "vocabulary.exportExcel": "Export Excel",
+  "vocabulary.importExcel": "Import Excel",
+  "auth.firstName": "First name",
+  "auth.lastName": "Last name",
+  "auth.confirmPassword": "Confirm password",
+  "auth.passwordMismatch": "The passwords do not match.",
 };

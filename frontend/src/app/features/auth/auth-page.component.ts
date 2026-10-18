@@ -55,6 +55,15 @@ export class AuthPageComponent {
       nonNullable: true,
       validators: [Validators.maxLength(120)],
     }),
+    firstName: new FormControl("", {
+      nonNullable: true,
+      validators: [Validators.maxLength(80)],
+    }),
+    lastName: new FormControl("", {
+      nonNullable: true,
+      validators: [Validators.maxLength(80)],
+    }),
+    confirmPassword: new FormControl("", { nonNullable: true }),
     email: new FormControl("", {
       nonNullable: true,
       validators: [
@@ -75,13 +84,13 @@ export class AuthPageComponent {
 
   constructor() {
     effect(() => {
-      const control = this.form.controls.name;
-      if (this.mode() === "register") {
-        control.addValidators(Validators.required);
-      } else {
-        control.removeValidators(Validators.required);
+      const register = this.mode() === "register";
+      for (const key of ["name", "firstName", "lastName", "confirmPassword"] as const) {
+        const control = this.form.controls[key];
+        if (register) control.addValidators(Validators.required);
+        else control.removeValidators(Validators.required);
+        control.updateValueAndValidity();
       }
-      control.updateValueAndValidity();
     });
   }
 
@@ -92,11 +101,19 @@ export class AuthPageComponent {
     }
     this.busy.set(true);
     this.error.set("");
-    const { name, email, password } = this.form.getRawValue();
+    const { name, firstName, lastName, email, password, confirmPassword } =
+      this.form.getRawValue();
+    if (this.mode() === "register" && password !== confirmPassword) {
+      this.busy.set(false);
+      this.error.set(this.locale.translate("auth.passwordMismatch"));
+      return;
+    }
     const request =
       this.mode() === "register"
         ? this.auth.register({
             name: name.trim(),
+            firstName: firstName.trim() || null,
+            lastName: lastName.trim() || null,
             email: email.trim(),
             password,
           })
