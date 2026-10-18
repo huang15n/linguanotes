@@ -539,4 +539,10 @@ export const messages: Record<string, string> = {
   "auth.confirmPassword": "确认密码",
   "auth.passwordMismatch": "两次输入的密码不一致。",
   "note.class": "关联班级",
+  "classes.assignedExercises": "已分配练习",
+  "classes.selectExercise": "选择练习",
+  "classes.assign": "分配",
+  "classes.noExercises": "暂无已分配练习。",
+  "classes.membersTitle": "学生",
+  "classes.exerciseAssigned": "练习已分配给班级。",
 };

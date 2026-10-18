@@ -1,3 +1,4 @@
+import { DatePipe } from "@angular/common";
 import { Component, OnInit, computed, inject, signal } from "@angular/core";
 import {
   FormControl,
@@ -10,23 +11,31 @@ import { MatCardModule } from "@angular/material/card";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
+import { MatSelectModule } from "@angular/material/select";
 import { ApiService } from "../../core/services/api.service";
 import {
   LocaleService,
   TranslatePipe,
 } from "../../core/services/locale.service";
 import { AuthService } from "../../core/services/auth.service";
-import { ClassMember, SchoolClass } from "../../core/models";
+import {
+  ClassExercise,
+  ClassMember,
+  Exercise,
+  SchoolClass,
+} from "../../core/models";
 import { UiService } from "../../shared/dialogs/dialogs";
 
 @Component({
   imports: [
+    DatePipe,
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
+    MatSelectModule,
     TranslatePipe,
   ],
   styleUrl: "./classes.component.scss",
@@ -40,7 +49,12 @@ export class ClassesComponent implements OnInit {
   classes = signal<SchoolClass[]>([]);
   selected = signal<SchoolClass | null>(null);
   members = signal<ClassMember[]>([]);
+  assignments = signal<ClassExercise[]>([]);
+  exercises = signal<Exercise[]>([]);
   canCreate = computed(() => this.auth.account()?.role !== "USER");
+  assignForm = new FormGroup({
+    exerciseId: new FormControl<number | null>(null, Validators.required),
+  });
   form = new FormGroup({
     name: new FormControl("", {
       nonNullable: true,
@@ -57,6 +71,12 @@ export class ClassesComponent implements OnInit {
 
   ngOnInit() {
     this.load();
+    this.api.exercises().subscribe((items) => this.exercises.set(items));
+  }
+
+  ownExercises() {
+    const accountId = this.auth.account()?.id;
+    return this.exercises().filter((exercise) => exercise.ownerId === accountId);
   }
 
   load() {
@@ -99,6 +119,35 @@ export class ClassesComponent implements OnInit {
   select(schoolClass: SchoolClass) {
     this.selected.set(schoolClass);
     this.api.classMembers(schoolClass.id).subscribe((items) => this.members.set(items));
+    this.api
+      .classExercises(schoolClass.id)
+      .subscribe((items) => this.assignments.set(items));
+  }
+
+  assignExercise() {
+    const schoolClass = this.selected();
+    const exerciseId = this.assignForm.controls.exerciseId.value;
+    if (!schoolClass || exerciseId === null) return;
+    this.api.assignClassExercise(schoolClass.id, exerciseId).subscribe((assignment) => {
+      this.assignments.update((items) => [
+        assignment,
+        ...items.filter((item) => item.id !== assignment.id),
+      ]);
+      this.assignForm.reset({ exerciseId: null });
+      this.ui.toast(this.locale.translate("classes.exerciseAssigned"));
+    });
+  }
+
+  removeAssignment(assignment: ClassExercise) {
+    const schoolClass = this.selected();
+    if (!schoolClass) return;
+    this.api
+      .removeClassExercise(schoolClass.id, assignment.id)
+      .subscribe(() =>
+        this.assignments.update((items) =>
+          items.filter((item) => item.id !== assignment.id),
+        ),
+      );
   }
 
   removeMember(member: ClassMember) {

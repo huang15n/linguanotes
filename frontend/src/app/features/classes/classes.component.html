@@ -86,6 +86,48 @@
               }
             </div>
             @if (schoolClass.description) { <p class="muted">{{ schoolClass.description }}</p> }
+            <div class="section-heading">
+              <h3>{{ "classes.assignedExercises" | t }}</h3>
+              <span class="pill">{{ assignments().length }}</span>
+            </div>
+            @if (schoolClass.owner) {
+              <form [formGroup]="assignForm" (ngSubmit)="assignExercise()" class="assign-form">
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ "classes.selectExercise" | t }}</mat-label>
+                  <mat-select formControlName="exerciseId">
+                    @for (exercise of ownExercises(); track exercise.id) {
+                      <mat-option [value]="exercise.id">{{ exercise.title }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <button mat-flat-button type="submit" [disabled]="assignForm.invalid">
+                  <mat-icon>assignment_add</mat-icon>
+                  {{ "classes.assign" | t }}
+                </button>
+              </form>
+            }
+            <div class="assignment-list">
+              @for (assignment of assignments(); track assignment.id) {
+                <div class="assignment-row">
+                  <mat-icon>quiz</mat-icon>
+                  <div class="member-main">
+                    <strong>{{ assignment.exerciseTitle }}</strong>
+                    <span class="muted">{{ assignment.assignedAt | date: "short" }}</span>
+                  </div>
+                  @if (schoolClass.owner) {
+                    <button mat-icon-button type="button" (click)="removeAssignment(assignment)" [attr.aria-label]="'common.delete' | t">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  }
+                </div>
+              } @empty {
+                <p class="muted">{{ "classes.noExercises" | t }}</p>
+              }
+            </div>
+
+            <div class="section-heading">
+              <h3>{{ "classes.membersTitle" | t }}</h3>
+            </div>
             <div class="member-list">
               @for (member of members(); track member.userId) {
                 <div class="member-row">

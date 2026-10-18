@@ -541,4 +541,10 @@ export const messages: Record<string, string> = {
   "auth.confirmPassword": "Confirm password",
   "auth.passwordMismatch": "The passwords do not match.",
   "note.class": "Linked class",
+  "classes.assignedExercises": "Assigned exercises",
+  "classes.selectExercise": "Choose an exercise",
+  "classes.assign": "Assign",
+  "classes.noExercises": "No exercises assigned.",
+  "classes.membersTitle": "Students",
+  "classes.exerciseAssigned": "Exercise assigned to the class.",
 };

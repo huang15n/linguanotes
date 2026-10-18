@@ -4,6 +4,7 @@ import {
   Account,
   AccountStatus,
   AiGeneration,
+  ClassExercise,
   ClassMember,
   Course,
   Dashboard,
@@ -348,6 +349,20 @@ export class ApiService {
   }
   deleteClass(id: number) {
     return this.http.delete<void>(`${this.b}/classes/${id}`);
+  }
+  classExercises(id: number) {
+    return this.http.get<ClassExercise[]>(`${this.b}/classes/${id}/exercises`);
+  }
+  assignClassExercise(id: number, exerciseId: number) {
+    return this.http.post<ClassExercise>(
+      `${this.b}/classes/${id}/exercises`,
+      { exerciseId, dueAt: null },
+    );
+  }
+  removeClassExercise(classId: number, assignmentId: number) {
+    return this.http.delete<void>(
+      `${this.b}/classes/${classId}/exercises/${assignmentId}`,
+    );
   }
   changePassword(currentPassword: string, newPassword: string) {
     return this.http.put<void>(`${this.b}/auth/password`, {

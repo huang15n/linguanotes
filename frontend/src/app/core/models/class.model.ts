@@ -17,3 +17,13 @@ export interface ClassMember {
   role: string;
   joinedAt: string;
 }
+
+export interface ClassExercise {
+  id: number;
+  classId: number;
+  exerciseId: number;
+  exerciseTitle: string;
+  exerciseOwnerId: number;
+  assignedAt: string;
+  dueAt: string | null;
+}

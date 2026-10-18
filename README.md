@@ -96,7 +96,7 @@ moins 12 caractères.
 - Révisions : sélection de mots par langue/niveau/statut, cartes, traduction,
   choix multiple et enregistrement des sessions.
 - Classes : création par un enseignant/administrateur, code d'invitation,
-  inscription des élèves et gestion des membres.
+  inscription des élèves, gestion des membres et affectation d'exercices.
 - Profil complet : prénom/nom, nom d'affichage, pays, fuseau horaire, langue
   maternelle et langues étudiées avec niveaux.
 - Administration : recherche, filtres par rôle/statut, changement de rôle et

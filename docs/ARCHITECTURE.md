@@ -51,6 +51,8 @@ Règles :
 - Les sections de leçon (`lesson_sections`) et les conjugaisons
   (`vocabulary_entries.conjugation_json`) sont volontairement flexibles : type de
   section, ordre, visibilité et contenu JSON permettent d'adapter chaque cours.
+- Les enseignants affectent des exercices à leurs classes via
+  `class_exercises` ; les élèves voient ces affectations depuis la page Classes.
 - Les notes utilisent une sauvegarde automatique (`PUT /api/notes/{id}/autosave`)
   avec contrôle de version ; les interactions sociales sont isolées dans
   `NoteInteractionService`.
