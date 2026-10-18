@@ -63,7 +63,9 @@ public class AuthController {
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
         contextRepository.saveContext(context, servletRequest, response);
-        return accounts.getAccount(((AccountPrincipal) authentication.getPrincipal()).id());
+        Long accountId = ((AccountPrincipal) authentication.getPrincipal()).id();
+        accounts.markLogin(accountId);
+        return accounts.getAccount(accountId);
     }
 
     @GetMapping("/me")

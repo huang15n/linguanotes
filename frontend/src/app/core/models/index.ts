@@ -1,5 +1,6 @@
 export * from "./account.model";
 export * from "./ai.model";
+export * from "./class.model";
 export * from "./course.model";
 export * from "./dashboard.model";
 export * from "./exercise.model";
@@ -8,6 +9,7 @@ export * from "./import-job.model";
 export * from "./language.model";
 export * from "./note.model";
 export * from "./tag.model";
+export * from "./profile.model";
 export * from "./progress.model";
 export * from "./review.model";
 export * from "./vocabulary.model";

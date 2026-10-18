@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from "@angular/core";
+import { Component, OnInit, inject, signal } from "@angular/core";
 import { Router } from "@angular/router";
 import {
   FormControl,
@@ -9,8 +9,10 @@ import {
 import { MatButtonModule } from "@angular/material/button";
 import { MatCardModule } from "@angular/material/card";
 import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
+import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { MatSnackBar } from "@angular/material/snack-bar";
 import { ApiService } from "../../core/services/api.service";
 import { AuthService } from "../../core/services/auth.service";
@@ -19,7 +21,10 @@ import {
   LocaleService,
   TranslatePipe,
 } from "../../core/services/locale.service";
+import { Language, UserLanguage } from "../../core/models";
 import { UiService } from "../../shared/dialogs/dialogs";
+
+type Tab = "profile" | "security" | "preferences" | "data";
 
 @Component({
   imports: [
@@ -27,8 +32,10 @@ import { UiService } from "../../shared/dialogs/dialogs";
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
+    MatIconModule,
     MatInputModule,
     MatSelectModule,
+    MatSlideToggleModule,
     TranslatePipe,
   ],
   styleUrl: "./settings.component.scss",
@@ -37,15 +44,24 @@ import { UiService } from "../../shared/dialogs/dialogs";
 export class SettingsComponent implements OnInit {
   private api = inject(ApiService);
   auth = inject(AuthService);
-  private locale = inject(LocaleService);
+  locale = inject(LocaleService);
   private router = inject(Router);
   private snack = inject(MatSnackBar);
   private ui = inject(UiService);
+  tab = signal<Tab>("profile");
+  languages = signal<Language[]>([]);
+  userLanguages = signal<UserLanguage[]>([]);
   profile = new FormGroup({
     name: new FormControl(this.auth.account()?.name ?? "", {
       nonNullable: true,
       validators: [Validators.required, Validators.maxLength(120)],
     }),
+    firstName: new FormControl("", { nonNullable: true }),
+    lastName: new FormControl("", { nonNullable: true }),
+    displayName: new FormControl("", { nonNullable: true }),
+    country: new FormControl("", { nonNullable: true }),
+    timezone: new FormControl("", { nonNullable: true }),
+    nativeLanguageId: new FormControl<number | null>(null),
   });
   password = new FormGroup({
     currentPassword: new FormControl("", {
@@ -70,6 +86,11 @@ export class SettingsComponent implements OnInit {
       validators: [Validators.min(1), Validators.max(240)],
     }),
   });
+  languageForm = new FormGroup({
+    languageId: new FormControl<number | null>(null, Validators.required),
+    level: new FormControl("", { nonNullable: true }),
+    target: new FormControl(true, { nonNullable: true }),
+  });
   deleteForm = new FormGroup({
     password: new FormControl("", {
       nonNullable: true,
@@ -78,6 +99,20 @@ export class SettingsComponent implements OnInit {
   });
 
   ngOnInit() {
+    const account = this.auth.account();
+    if (account) {
+      this.profile.patchValue({
+        name: account.name,
+        firstName: account.firstName ?? "",
+        lastName: account.lastName ?? "",
+        displayName: account.displayName ?? "",
+        country: account.country ?? "",
+        timezone: account.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+        nativeLanguageId: account.nativeLanguageId,
+      });
+    }
+    this.api.languages().subscribe((items) => this.languages.set(items));
+    this.api.userLanguages().subscribe((items) => this.userLanguages.set(items));
     this.api.preferences().subscribe((preference) => {
       this.preferences.setValue({
         interfaceLocale: preference.customized
@@ -88,13 +123,31 @@ export class SettingsComponent implements OnInit {
     });
   }
 
+  languageLevels() {
+    return (
+      this.languages().find(
+        (language) => language.id === this.languageForm.controls.languageId.value,
+      )?.levels ?? []
+    );
+  }
+
   saveProfile() {
     if (this.profile.invalid) {
       this.profile.markAllAsTouched();
       return;
     }
+    const value = this.profile.getRawValue();
     this.api
-      .updateProfile(this.profile.controls.name.value.trim())
+      .updateProfile({
+        name: value.name.trim(),
+        firstName: value.firstName.trim() || null,
+        lastName: value.lastName.trim() || null,
+        displayName: value.displayName.trim() || null,
+        avatarUrl: this.auth.account()?.avatarUrl ?? null,
+        country: value.country.trim() || null,
+        timezone: value.timezone.trim() || null,
+        nativeLanguageId: value.nativeLanguageId,
+      })
       .subscribe((account) => {
         this.auth.account.set(account);
         this.snack.open(this.locale.translate("settings.profileSaved"), "OK", {
@@ -131,6 +184,35 @@ export class SettingsComponent implements OnInit {
           { duration: 2500 },
         );
       });
+  }
+
+  addLanguage() {
+    if (this.languageForm.invalid) {
+      this.languageForm.markAllAsTouched();
+      return;
+    }
+    const value = this.languageForm.getRawValue();
+    if (value.languageId === null) return;
+    this.api
+      .saveUserLanguage({
+        languageId: value.languageId,
+        level: value.level || null,
+        target: value.target,
+      })
+      .subscribe(() => {
+        this.languageForm.reset({ languageId: null, level: "", target: true });
+        this.api
+          .userLanguages()
+          .subscribe((items) => this.userLanguages.set(items));
+      });
+  }
+
+  removeLanguage(entry: UserLanguage) {
+    this.api.deleteUserLanguage(entry.id).subscribe(() =>
+      this.userLanguages.update((items) =>
+        items.filter((item) => item.id !== entry.id),
+      ),
+    );
   }
 
   exportData() {

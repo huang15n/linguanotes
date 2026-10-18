@@ -2,8 +2,10 @@ package com.linguanotes.service;
 
 import com.linguanotes.dto.*;
 import com.linguanotes.model.AccountRole;
+import com.linguanotes.model.AccountStatus;
 import com.linguanotes.model.PasswordResetToken;
 import com.linguanotes.model.UserAccount;
+import com.linguanotes.repository.LanguageRepository;
 import com.linguanotes.repository.PasswordResetTokenRepository;
 import com.linguanotes.repository.UserAccountRepository;
 import jakarta.mail.MessagingException;
@@ -35,6 +37,7 @@ public class AccountService {
     private final PasswordEncoder passwords;
     private final ObjectProvider<JavaMailSender> mailSenders;
     private final FileStorageService fileStorage;
+    private final LanguageRepository languages;
     private final SecureRandom random = new SecureRandom();
 
     @Value("${spring.mail.host:}")
@@ -48,12 +51,13 @@ public class AccountService {
 
     public AccountService(UserAccountRepository accounts, PasswordResetTokenRepository resetTokens,
                           PasswordEncoder passwords, ObjectProvider<JavaMailSender> mailSenders,
-                          FileStorageService fileStorage) {
+                          FileStorageService fileStorage, LanguageRepository languages) {
         this.accounts = accounts;
         this.resetTokens = resetTokens;
         this.passwords = passwords;
         this.mailSenders = mailSenders;
         this.fileStorage = fileStorage;
+        this.languages = languages;
     }
 
     @Transactional
@@ -81,11 +85,49 @@ public class AccountService {
         return accounts.findAll().stream().map(this::response).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<AccountResponse> searchAccounts(String query, AccountRole role, AccountStatus status) {
+        String needle = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
+        return accounts.findAll().stream()
+                .filter(account -> needle.isEmpty()
+                        || account.getName().toLowerCase(Locale.ROOT).contains(needle)
+                        || account.getEmail().toLowerCase(Locale.ROOT).contains(needle))
+                .filter(account -> role == null || account.getRole() == role)
+                .filter(account -> status == null || account.getStatus() == status)
+                .map(this::response)
+                .toList();
+    }
+
     @Transactional
     public AccountResponse updateProfile(Long id, ProfileUpdateRequest request) {
         UserAccount account = findAccount(id);
         account.setName(request.name().trim());
+        if (request.firstName() != null) account.setFirstName(trimToNull(request.firstName()));
+        if (request.lastName() != null) account.setLastName(trimToNull(request.lastName()));
+        if (request.displayName() != null) account.setDisplayName(trimToNull(request.displayName()));
+        if (request.avatarUrl() != null) account.setAvatarUrl(trimToNull(request.avatarUrl()));
+        if (request.country() != null) account.setCountry(trimToNull(request.country()));
+        if (request.timezone() != null) account.setTimezone(trimToNull(request.timezone()));
+        if (request.nativeLanguageId() != null) {
+            account.setNativeLanguage(languages.findById(request.nativeLanguageId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Langue introuvable")));
+        }
         return response(accounts.save(account));
+    }
+
+    @Transactional
+    public AccountResponse updateStatus(Long id, AccountStatus status) {
+        UserAccount account = findAccount(id);
+        account.setStatus(status);
+        account.setEnabled(status == AccountStatus.ACTIVE);
+        return response(accounts.save(account));
+    }
+
+    @Transactional
+    public void markLogin(Long id) {
+        UserAccount account = findAccount(id);
+        account.setLastLoginAt(LocalDateTime.now());
+        accounts.save(account);
     }
 
     @Transactional
@@ -182,7 +224,18 @@ public class AccountService {
     }
 
     private AccountResponse response(UserAccount account) {
-        return new AccountResponse(account.getId(), account.getName(), account.getEmail(), account.getRole().name());
+        return new AccountResponse(account.getId(), account.getName(), account.getEmail(),
+                account.getRole().name(), account.getFirstName(), account.getLastName(),
+                account.getDisplayName(), account.getAvatarUrl(), account.getCountry(),
+                account.getTimezone(),
+                account.getNativeLanguage() == null ? null : account.getNativeLanguage().getId(),
+                account.getNativeLanguage() == null ? null : account.getNativeLanguage().getName(),
+                account.getStatus(), account.getLastLoginAt());
+    }
+
+    private String trimToNull(String value) {
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private String normalizeEmail(String email) {

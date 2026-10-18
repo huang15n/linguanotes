@@ -93,13 +93,19 @@ moins 12 caractères.
   réussite, nombre de tentatives et mode aperçu ; correction côté serveur.
 - Révisions : sélection de mots par langue/niveau/statut, cartes, traduction,
   choix multiple et enregistrement des sessions.
+- Classes : création par un enseignant/administrateur, code d'invitation,
+  inscription des élèves et gestion des membres.
+- Profil complet : prénom/nom, nom d'affichage, pays, fuseau horaire, langue
+  maternelle et langues étudiées avec niveaux.
+- Administration : recherche, filtres par rôle/statut, changement de rôle et
+  suspension de compte.
 - Tableau de bord et progression repensés, thème clair/sombre, interface
   FR/ES/EN/ZH-CN.
 - Import PDF textuel, DOCX, XLSX et XLS avec aperçu avant confirmation.
 - Gestion des fichiers privés (documents, images et audio), téléchargement contrôlé.
 - Assistant IA compatible OpenAI, limité à 20 générations par utilisateur/jour.
 - Export JSON et suppression de compte.
-- Migrations Flyway V1–V9, validation Hibernate et OpenAPI/Swagger.
+- Migrations Flyway V1–V10, validation Hibernate et OpenAPI/Swagger.
 
 ## Structure du dépôt
 

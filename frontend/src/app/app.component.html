@@ -41,6 +41,10 @@
             <mat-icon matListItemIcon>insights</mat-icon>
             <span matListItemTitle>{{ "nav.progress" | t }}</span>
           </a>
+          <a mat-list-item routerLink="/classes" routerLinkActive="active" (click)="open.set(false)">
+            <mat-icon matListItemIcon>groups</mat-icon>
+            <span matListItemTitle>{{ "nav.classes" | t }}</span>
+          </a>
         </div>
 
         <div class="nav-group">

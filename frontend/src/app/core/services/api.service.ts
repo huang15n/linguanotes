@@ -2,7 +2,9 @@ import { Injectable, inject } from "@angular/core";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import {
   Account,
+  AccountStatus,
   AiGeneration,
+  ClassMember,
   Course,
   Dashboard,
   DueCard,
@@ -20,6 +22,7 @@ import {
   NoteFilters,
   NoteLikeResult,
   NoteRequest,
+  ProfileUpdate,
   ProgressPoint,
   ProgressSummary,
   RegisterRequest,
@@ -27,9 +30,11 @@ import {
   ReviewRating,
   ReviewResult,
   ReviewSession,
+  SchoolClass,
   StoredFile,
   Tag,
   Unit,
+  UserLanguage,
   VocabularyEntry,
 } from "../models";
 
@@ -273,11 +278,20 @@ export class ApiService {
   deleteFile(id: number) {
     return this.http.delete<void>(`${this.b}/files/${id}`);
   }
-  adminUsers() {
-    return this.http.get<Account[]>(`${this.b}/admin/users`);
+  adminUsers(query = "", role = "", status = "") {
+    let params = new HttpParams();
+    if (query) params = params.set("q", query);
+    if (role) params = params.set("role", role);
+    if (status) params = params.set("status", status);
+    return this.http.get<Account[]>(`${this.b}/admin/users`, { params });
   }
   updateUserRole(id: number, role: Account["role"]) {
     return this.http.put<Account>(`${this.b}/admin/users/${id}/role`, { role });
+  }
+  updateUserStatus(id: number, status: AccountStatus) {
+    return this.http.put<Account>(`${this.b}/admin/users/${id}/status`, {
+      status,
+    });
   }
   ai(kind: "explain" | "generate-exercise" | "enrich-note", body: object) {
     return this.http.post<AiGeneration>(`${this.b}/ai/${kind}`, body);
@@ -285,8 +299,41 @@ export class ApiService {
   login(body: LoginRequest) {
     return this.http.post<Account>(`${this.b}/auth/login`, body);
   }
-  updateProfile(name: string) {
-    return this.http.put<Account>(`${this.b}/auth/profile`, { name });
+  updateProfile(body: ProfileUpdate) {
+    return this.http.put<Account>(`${this.b}/auth/profile`, body);
+  }
+  userLanguages() {
+    return this.http.get<UserLanguage[]>(`${this.b}/profile/languages`);
+  }
+  saveUserLanguage(body: {
+    languageId: number;
+    level: string | null;
+    target: boolean;
+  }) {
+    return this.http.post<UserLanguage>(`${this.b}/profile/languages`, body);
+  }
+  deleteUserLanguage(id: number) {
+    return this.http.delete<void>(`${this.b}/profile/languages/${id}`);
+  }
+  classes() {
+    return this.http.get<SchoolClass[]>(`${this.b}/classes`);
+  }
+  createClass(body: { name: string; description: string | null }) {
+    return this.http.post<SchoolClass>(`${this.b}/classes`, body);
+  }
+  joinClass(joinCode: string) {
+    return this.http.post<SchoolClass>(`${this.b}/classes/join`, { joinCode });
+  }
+  classMembers(id: number) {
+    return this.http.get<ClassMember[]>(`${this.b}/classes/${id}/members`);
+  }
+  removeClassMember(classId: number, userId: number) {
+    return this.http.delete<void>(
+      `${this.b}/classes/${classId}/members/${userId}`,
+    );
+  }
+  deleteClass(id: number) {
+    return this.http.delete<void>(`${this.b}/classes/${id}`);
   }
   changePassword(currentPassword: string, newPassword: string) {
     return this.http.put<void>(`${this.b}/auth/password`, {

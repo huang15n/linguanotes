@@ -45,7 +45,7 @@ Règles :
   JSON `{ "message": "..." }` par `GlobalExceptionHandler`.
 - Toute évolution du schéma passe par une migration Flyway versionnée dans
   `src/main/resources/db/migration`. Ne jamais modifier une migration déjà
-  appliquée (V1–V9 existent ; toute suite commence à V10).
+  appliquée (V1–V10 existent ; toute suite commence à V11).
 - Les référentiels transverses (`language_levels`, `tags`) sont exposés par leurs
   propres services ; les notes et le vocabulaire les réutilisent.
 - Les sections de leçon (`lesson_sections`) et les conjugaisons
@@ -94,6 +94,7 @@ src/app/
 │   ├── admin/           Gestion des comptes (ADMIN)
 │   ├── ai/              Assistant IA
 │   ├── auth/            Connexion, inscription, réinitialisation
+│   ├── classes/         Classes, code d'invitation et membres
 │   ├── courses/         Cours → unités → leçons → sections pédagogiques
 │   ├── dashboard/       Tableau de bord visuel
 │   ├── exercises/       Quiz paramétrables, pratique et aperçu

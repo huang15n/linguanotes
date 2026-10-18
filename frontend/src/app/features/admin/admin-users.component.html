@@ -1,29 +1,76 @@
 <div class="page">
-  <h1>{{ "admin.title" | t }}</h1>
+  <div class="page-header">
+    <div>
+      <span class="eyebrow"><mat-icon>admin_panel_settings</mat-icon>{{ "admin.eyebrow" | t }}</span>
+      <h1>{{ "admin.title" | t }}</h1>
+      <p class="subtitle">{{ "admin.subtitle" | t }}</p>
+    </div>
+  </div>
+
+  <div class="admin-filters">
+    <mat-form-field appearance="outline" class="grow">
+      <mat-label>{{ "admin.search" | t }}</mat-label>
+      <input matInput [value]="query()" (input)="query.set($any($event.target).value)" (keyup.enter)="load()" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "admin.role" | t }}</mat-label>
+      <mat-select [value]="roleFilter()" (selectionChange)="roleFilter.set($event.value); load()">
+        <mat-option value="">{{ "common.all" | t }}</mat-option>
+        @for (role of roles; track role) {
+          <mat-option [value]="role">{{ role }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "admin.status" | t }}</mat-label>
+      <mat-select [value]="statusFilter()" (selectionChange)="statusFilter.set($event.value); load()">
+        <mat-option value="">{{ "common.all" | t }}</mat-option>
+        @for (status of statuses; track status) {
+          <mat-option [value]="status">{{ "admin.status." + status | t }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <button mat-flat-button type="button" (click)="load()">{{ "admin.searchButton" | t }}</button>
+  </div>
+
   <mat-card appearance="outlined">
     <mat-card-content>
-      <h2>{{ "admin.users" | t }}</h2>
-      <div class="user-list">
+      <div class="user-table">
+        <div class="user-head">
+          <span>{{ "admin.name" | t }}</span>
+          <span>{{ "admin.email" | t }}</span>
+          <span>{{ "admin.role" | t }}</span>
+          <span>{{ "admin.status" | t }}</span>
+          <span>{{ "admin.lastLogin" | t }}</span>
+        </div>
         @for (user of users(); track user.id) {
-          <article class="user-row">
-            <div class="user-main">
+          <div class="user-row">
+            <div class="user-identity">
+              <span class="avatar">{{ user.name.charAt(0).toUpperCase() }}</span>
               <strong>{{ user.name }}</strong>
-              <span class="muted">{{ user.email }}</span>
             </div>
-            <mat-form-field appearance="outline" class="role-field">
-              <mat-label>{{ "admin.role" | t }}</mat-label>
-              <mat-select
-                [value]="user.role"
-                (selectionChange)="changeRole(user, $event.value)"
-              >
+            <span class="muted email">{{ user.email }}</span>
+            <mat-form-field appearance="outline" class="compact-field">
+              <mat-select [value]="user.role" (selectionChange)="changeRole(user, $event.value)">
                 @for (role of roles; track role) {
                   <mat-option [value]="role">{{ role }}</mat-option>
                 }
               </mat-select>
             </mat-form-field>
-          </article>
+            <mat-form-field appearance="outline" class="compact-field">
+              <mat-select [value]="user.status" (selectionChange)="changeStatus(user, $event.value)">
+                @for (status of statuses; track status) {
+                  <mat-option [value]="status">{{ "admin.status." + status | t }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <span class="muted">
+              {{ user.lastLoginAt ? (user.lastLoginAt | date: "short") : "—" }}
+            </span>
+          </div>
         } @empty {
-          <p class="muted">{{ "admin.empty" | t }}</p>
+          <p class="muted empty">{{ "admin.empty" | t }}</p>
         }
       </div>
     </mat-card-content>

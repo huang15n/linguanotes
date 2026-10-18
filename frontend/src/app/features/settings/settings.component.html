@@ -1,53 +1,191 @@
 <div class="page">
-  <h1>{{ "settings.title" | t }}</h1>
-  <div class="settings-layout">
+  <div class="page-header">
+    <div>
+      <span class="eyebrow"><mat-icon>settings</mat-icon>{{ "settings.eyebrow" | t }}</span>
+      <h1>{{ "settings.title" | t }}</h1>
+      <p class="subtitle">{{ "settings.subtitle" | t }}</p>
+    </div>
+  </div>
+
+  <div class="tab-row">
+    <button mat-flat-button type="button" [class.secondary]="tab() !== 'profile'" (click)="tab.set('profile')">
+      <mat-icon>person</mat-icon>{{ "settings.profile" | t }}
+    </button>
+    <button mat-flat-button type="button" [class.secondary]="tab() !== 'security'" (click)="tab.set('security')">
+      <mat-icon>lock</mat-icon>{{ "settings.security" | t }}
+    </button>
+    <button mat-flat-button type="button" [class.secondary]="tab() !== 'preferences'" (click)="tab.set('preferences')">
+      <mat-icon>tune</mat-icon>{{ "settings.preferences" | t }}
+    </button>
+    <button mat-flat-button type="button" [class.secondary]="tab() !== 'data'" (click)="tab.set('data')">
+      <mat-icon>database</mat-icon>{{ "settings.data" | t }}
+    </button>
+  </div>
+
+  @if (tab() === "profile") {
     <mat-card appearance="outlined">
       <mat-card-content>
-        <h2>{{ "settings.profile" | t }}</h2>
+        <h2>{{ "settings.identity" | t }}</h2>
         <p class="muted">{{ auth.account()?.email }}</p>
-        <form [formGroup]="profile" (ngSubmit)="saveProfile()">
-          <mat-form-field appearance="outline"><mat-label>{{ "auth.name" | t }}</mat-label><input matInput formControlName="name" autocomplete="name" /></mat-form-field>
-          <button mat-flat-button type="submit">{{ "common.save" | t }}</button>
+        <form [formGroup]="profile" (ngSubmit)="saveProfile()" class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ "auth.name" | t }}</mat-label>
+            <input matInput formControlName="name" autocomplete="name" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ "settings.firstName" | t }}</mat-label>
+            <input matInput formControlName="firstName" autocomplete="given-name" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ "settings.lastName" | t }}</mat-label>
+            <input matInput formControlName="lastName" autocomplete="family-name" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ "settings.displayName" | t }}</mat-label>
+            <input matInput formControlName="displayName" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ "settings.country" | t }}</mat-label>
+            <input matInput formControlName="country" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ "settings.timezone" | t }}</mat-label>
+            <input matInput formControlName="timezone" placeholder="Europe/Paris" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ "settings.nativeLanguage" | t }}</mat-label>
+            <mat-select formControlName="nativeLanguageId">
+              <mat-option [value]="null">{{ "common.none" | t }}</mat-option>
+              @for (language of languages(); track language.id) {
+                <mat-option [value]="language.id">{{ language.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <div class="form-actions">
+            <button mat-flat-button type="submit">{{ "common.save" | t }}</button>
+          </div>
         </form>
       </mat-card-content>
     </mat-card>
+  }
+
+  @if (tab() === "security") {
     <mat-card appearance="outlined">
       <mat-card-content>
         <h2>{{ "settings.security" | t }}</h2>
-        <form [formGroup]="password" (ngSubmit)="changePassword()">
-          <mat-form-field appearance="outline"><mat-label>{{ "settings.currentPassword" | t }}</mat-label><input matInput type="password" formControlName="currentPassword" autocomplete="current-password" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>{{ "auth.newPassword" | t }}</mat-label><input matInput type="password" formControlName="newPassword" autocomplete="new-password" />
-            @if (password.controls.newPassword.hasError("minlength")) { <mat-error>{{ "auth.passwordLength" | t }}</mat-error> }
-          </mat-form-field>
-          <button mat-flat-button type="submit">{{ "settings.changePassword" | t }}</button>
-        </form>
-      </mat-card-content>
-    </mat-card>
-    <mat-card appearance="outlined">
-      <mat-card-content>
-        <h2>{{ "settings.preferences" | t }}</h2>
-        <form [formGroup]="preferences" (ngSubmit)="savePreferences()">
+        <p class="muted">{{ "settings.securityHint" | t }}</p>
+        <form [formGroup]="password" (ngSubmit)="changePassword()" class="form-grid">
           <mat-form-field appearance="outline">
-            <mat-label>{{ "locale.label" | t }}</mat-label>
-            <mat-select formControlName="interfaceLocale">
-              <mat-option value="fr">Français</mat-option><mat-option value="es">Español</mat-option>
-              <mat-option value="en">English</mat-option><mat-option value="zh-CN">简体中文</mat-option>
-            </mat-select>
+            <mat-label>{{ "settings.currentPassword" | t }}</mat-label>
+            <input matInput type="password" formControlName="currentPassword" autocomplete="current-password" />
           </mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>{{ "settings.dailyGoal" | t }}</mat-label><input matInput type="number" min="1" max="240" formControlName="dailyGoalMinutes" /></mat-form-field>
-          <button mat-flat-button type="submit">{{ "common.save" | t }}</button>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ "auth.newPassword" | t }}</mat-label>
+            <input matInput type="password" formControlName="newPassword" autocomplete="new-password" />
+            @if (password.controls.newPassword.hasError("minlength")) {
+              <mat-error>{{ "auth.passwordLength" | t }}</mat-error>
+            }
+          </mat-form-field>
+          <div class="form-actions">
+            <button mat-flat-button type="submit">{{ "settings.changePassword" | t }}</button>
+          </div>
         </form>
       </mat-card-content>
     </mat-card>
-    <mat-card appearance="outlined">
-      <mat-card-content>
-        <h2>{{ "settings.data" | t }}</h2>
-        <button mat-button type="button" (click)="exportData()">{{ "settings.export" | t }}</button>
-        <form [formGroup]="deleteForm" (ngSubmit)="deleteAccount()">
-          <mat-form-field appearance="outline"><mat-label>{{ "settings.confirmPassword" | t }}</mat-label><input matInput type="password" autocomplete="current-password" formControlName="password" /></mat-form-field>
-          <button mat-button color="warn" type="submit">{{ "settings.deleteAccount" | t }}</button>
-        </form>
-      </mat-card-content>
-    </mat-card>
-  </div>
+  }
+
+  @if (tab() === "preferences") {
+    <div class="settings-grid">
+      <mat-card appearance="outlined">
+        <mat-card-content>
+          <h2>{{ "settings.preferences" | t }}</h2>
+          <form [formGroup]="preferences" (ngSubmit)="savePreferences()">
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "locale.label" | t }}</mat-label>
+              <mat-select formControlName="interfaceLocale">
+                @for (item of locale.locales; track item.code) {
+                  <mat-option [value]="item.code">{{ item.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "settings.dailyGoal" | t }}</mat-label>
+              <input matInput type="number" min="1" max="240" formControlName="dailyGoalMinutes" />
+            </mat-form-field>
+            <button mat-flat-button type="submit">{{ "common.save" | t }}</button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined">
+        <mat-card-content>
+          <h2>{{ "settings.learningLanguages" | t }}</h2>
+          <div class="language-list">
+            @for (entry of userLanguages(); track entry.id) {
+              <div class="language-row">
+                <div>
+                  <strong>{{ entry.languageName }}</strong>
+                  <span class="muted">{{ entry.level ?? ("settings.noLevel" | t) }} · {{ entry.target ? ("settings.target" | t) : ("settings.source" | t) }}</span>
+                </div>
+                <button mat-icon-button type="button" (click)="removeLanguage(entry)" [attr.aria-label]="'common.delete' | t">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            } @empty {
+              <p class="muted">{{ "settings.noLanguages" | t }}</p>
+            }
+          </div>
+          <form [formGroup]="languageForm" (ngSubmit)="addLanguage()" class="language-form">
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "settings.language" | t }}</mat-label>
+              <mat-select formControlName="languageId">
+                @for (language of languages(); track language.id) {
+                  <mat-option [value]="language.id">{{ language.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "settings.level" | t }}</mat-label>
+              <mat-select formControlName="level">
+                <mat-option value="">{{ "common.none" | t }}</mat-option>
+                @for (level of languageLevels(); track level.code) {
+                  <mat-option [value]="level.code">{{ level.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-slide-toggle formControlName="target">{{ "settings.target" | t }}</mat-slide-toggle>
+            <button mat-flat-button type="submit">{{ "settings.addLanguage" | t }}</button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+
+  @if (tab() === "data") {
+    <div class="settings-grid">
+      <mat-card appearance="outlined">
+        <mat-card-content>
+          <h2>{{ "settings.export" | t }}</h2>
+          <p class="muted">{{ "settings.exportHint" | t }}</p>
+          <button mat-flat-button type="button" (click)="exportData()">
+            <mat-icon>download</mat-icon>
+            {{ "settings.export" | t }}
+          </button>
+        </mat-card-content>
+      </mat-card>
+      <mat-card appearance="outlined" class="danger-card">
+        <mat-card-content>
+          <h2>{{ "settings.dangerZone" | t }}</h2>
+          <p class="muted">{{ "settings.deleteWarning" | t }}</p>
+          <form [formGroup]="deleteForm" (ngSubmit)="deleteAccount()">
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "settings.confirmPassword" | t }}</mat-label>
+              <input matInput type="password" autocomplete="current-password" formControlName="password" />
+            </mat-form-field>
+            <button mat-button color="warn" type="submit">{{ "settings.deleteAccount" | t }}</button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
 </div>

@@ -83,6 +83,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "classes",
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import("./features/classes/classes.component").then(
+        (m) => m.ClassesComponent,
+      ),
+  },
+  {
     path: "vocabulary",
     canActivate: [authGuard],
     loadComponent: () =>
