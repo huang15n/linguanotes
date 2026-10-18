@@ -1,0 +1,43 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: linguanotes-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: linguanotes_app
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"          # 3307 côté Mac pour ne pas entrer en conflit avec un MySQL local
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./backend
+    container_name: linguanotes-backend
+    restart: on-failure
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_URL: "jdbc:mysql://mysql:3306/linguanotes_app?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+      DB_USER: root
+      DB_PASSWORD: root
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    container_name: linguanotes-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+
+volumes:
+  mysql_data:
