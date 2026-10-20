@@ -3,200 +3,124 @@
     <div>
       <span class="eyebrow"><mat-icon>school</mat-icon>{{ "courses.eyebrow" | t }}</span>
       <h1>{{ "courses.title" | t }}</h1>
-      <p class="subtitle">{{ "courses.subtitle" | t }}</p>
+      <p class="subtitle">{{ "courses.simpleSubtitle" | t }}</p>
     </div>
+    <button mat-flat-button type="button" (click)="openNew()">
+      <mat-icon>add</mat-icon>
+      {{ "courses.new" | t }}
+    </button>
   </div>
 
-  <div class="course-layout">
-    <section class="course-list">
-      <div class="panel-title">
-        <h2>{{ "courses.yours" | t }}</h2>
-        <span class="pill">{{ courses().length }}</span>
-      </div>
-      @if (loading()) {
-        <p class="muted">{{ "common.loading" | t }}</p>
-      } @else {
-        @for (course of courses(); track course.id) {
-          <button class="course-row" [class.selected]="selectedCourse()?.id === course.id" (click)="selectCourse(course)">
-            <span class="course-title">{{ course.title }}</span>
-            <span class="muted">{{ course.languageName }} · {{ course.level || statusLabel(course.status) }}</span>
+  @if (creating()) {
+    <mat-card appearance="outlined" class="course-editor">
+      <mat-card-content>
+        <div class="form-heading">
+          <h2>{{ (selected() ? "courses.edit" : "courses.new") | t }}</h2>
+          <button mat-icon-button type="button" (click)="cancel()" [attr.aria-label]="'common.close' | t">
+            <mat-icon>close</mat-icon>
           </button>
-        } @empty {
-          <p class="muted">{{ "courses.empty" | t }}</p>
-        }
-      }
-
-      <mat-card appearance="outlined" class="form-panel">
-        <mat-card-content>
-          <h3>{{ "courses.create" | t }}</h3>
-          <form [formGroup]="courseForm" (ngSubmit)="createCourse()">
-            <mat-form-field appearance="outline">
-              <mat-label>{{ "courses.name" | t }}</mat-label>
-              <input matInput formControlName="title" />
-            </mat-form-field>
+        </div>
+        <form [formGroup]="form" (ngSubmit)="save()">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ "courses.name" | t }}</mat-label>
+            <input matInput formControlName="title" />
+          </mat-form-field>
+          <div class="meta-row">
             <mat-form-field appearance="outline">
               <mat-label>{{ "courses.language" | t }}</mat-label>
               <mat-select formControlName="languageId">
-                @for (language of languages(); track language.id) { <mat-option [value]="language.id">{{ language.name }}</mat-option> }
+                @for (language of languages(); track language.id) {
+                  <mat-option [value]="language.id">{{ language.name }}</mat-option>
+                }
               </mat-select>
             </mat-form-field>
             <mat-form-field appearance="outline">
               <mat-label>{{ "courses.level" | t }}</mat-label>
               <mat-select formControlName="level">
-                <mat-option value="">—</mat-option>
-                @for (level of courseLevels(); track level) { <mat-option [value]="level">{{ level }}</mat-option> }
+                <mat-option value="">{{ "common.none" | t }}</mat-option>
+                @for (level of formLevels(); track level.code) {
+                  <mat-option [value]="level.label">{{ level.label }}</mat-option>
+                }
               </mat-select>
             </mat-form-field>
-            <button mat-flat-button type="submit">{{ "courses.create" | t }}</button>
-          </form>
-        </mat-card-content>
-      </mat-card>
-    </section>
-
-    <section class="course-content">
-      @if (selectedCourse(); as course) {
-        <div class="course-header">
-          <div class="grow">
-            <span class="pill">{{ course.languageName }}</span>
-            @if (course.level) { <span class="pill green">{{ course.level }}</span> }
-            <h2>{{ course.title }}</h2>
-            <p class="muted">{{ statusLabel(course.status) }}</p>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ "courses.status" | t }}</mat-label>
+              <mat-select formControlName="status">
+                <mat-option value="DRAFT">{{ "course.status.DRAFT" | t }}</mat-option>
+                <mat-option value="PUBLISHED">{{ "course.status.PUBLISHED" | t }}</mat-option>
+                <mat-option value="ARCHIVED">{{ "course.status.ARCHIVED" | t }}</mat-option>
+                <mat-option value="COMPLETED">{{ "course.status.COMPLETED" | t }}</mat-option>
+              </mat-select>
+            </mat-form-field>
           </div>
-          <button mat-icon-button type="button" (click)="removeCourse()" [attr.aria-label]="'common.delete' | t">
+          <div class="editor-label">
+            <span>{{ "courses.content" | t }}</span>
+            <span class="muted">{{ "courses.contentHint" | t }}</span>
+          </div>
+          <app-markdown-editor formControlName="content" />
+          <div class="form-actions">
+            <button mat-button type="button" (click)="cancel()">{{ "common.cancel" | t }}</button>
+            <button mat-flat-button type="submit" [disabled]="saving()">{{ "common.save" | t }}</button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <div class="courses-filters">
+    <mat-form-field appearance="outline" class="grow">
+      <mat-label>{{ "courses.search" | t }}</mat-label>
+      <input matInput [value]="search()" (input)="search.set($any($event.target).value)" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "courses.language" | t }}</mat-label>
+      <mat-select [value]="languageFilter()" (selectionChange)="languageFilter.set($event.value)">
+        <mat-option [value]="null">{{ "common.all" | t }}</mat-option>
+        @for (language of languages(); track language.id) {
+          <mat-option [value]="language.id">{{ language.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "courses.level" | t }}</mat-label>
+      <mat-select [value]="levelFilter()" (selectionChange)="levelFilter.set($event.value)">
+        <mat-option value="">{{ "common.all" | t }}</mat-option>
+        @for (level of filterLevels(); track level) {
+          <mat-option [value]="level">{{ level }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <button mat-button type="button" (click)="search.set(''); languageFilter.set(null); levelFilter.set('')">
+      {{ "courses.resetFilters" | t }}
+    </button>
+  </div>
+
+  <div class="course-grid">
+    @for (course of filtered(); track course.id) {
+      <article class="course-card" (click)="edit(course)">
+        <div class="course-card-head">
+          <span class="course-icon"><mat-icon>menu_book</mat-icon></span>
+          <div class="course-card-title">
+            <strong>{{ course.title }}</strong>
+            <span class="muted">{{ course.languageName }} · {{ course.level ?? ("common.none" | t) }}</span>
+          </div>
+          <button mat-icon-button type="button" (click)="$event.stopPropagation(); remove(course)" [attr.aria-label]="'common.delete' | t">
             <mat-icon>delete</mat-icon>
           </button>
         </div>
-
-        <div class="panel-title">
-          <h3>{{ "courses.units" | t }}</h3>
-          <span class="pill">{{ units().length }}</span>
+        <p class="course-excerpt">{{ (course.content ?? "").replace('#', '').slice(0, 160) || ("courses.emptyContent" | t) }}</p>
+        <div class="note-meta">
+          <span class="pill">{{ statusLabel(course.status) }}</span>
+          <span class="muted">{{ "courses.updated" | t }} {{ course.updatedAt | date: "mediumDate" : "" : locale.dateLocale() }}</span>
         </div>
-        <div class="unit-list">
-          @for (unit of units(); track unit.id) {
-            <div class="unit-row" [class.selected]="selectedUnit()?.id === unit.id">
-              <button class="unit-select" type="button" (click)="selectUnit(unit)">
-                <mat-icon>folder_open</mat-icon><span>{{ unit.title }}</span>
-              </button>
-              <button mat-icon-button type="button" (click)="removeUnit(unit)" [attr.aria-label]="'common.delete' | t">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </div>
-          } @empty {
-            <p class="muted">{{ "courses.noUnits" | t }}</p>
-          }
-        </div>
-        <form class="inline-form" [formGroup]="unitForm" (ngSubmit)="createUnit()">
-          <mat-form-field appearance="outline" class="grow">
-            <mat-label>{{ "courses.unitName" | t }}</mat-label>
-            <input matInput formControlName="title" />
-          </mat-form-field>
-          <button mat-flat-button type="submit"><mat-icon>add</mat-icon>{{ "courses.addUnit" | t }}</button>
-        </form>
-
-        @if (selectedUnit(); as unit) {
-          <div class="panel-title lesson-heading">
-            <h3>{{ unit.title }} · {{ "courses.lessons" | t }}</h3>
-            <span class="pill">{{ lessons().length }}</span>
-          </div>
-          <div class="lesson-list">
-            @for (lesson of lessons(); track lesson.id) {
-              <div class="lesson-row" [class.selected]="selectedLesson()?.id === lesson.id">
-                <button class="lesson-select" type="button" (click)="selectLesson(lesson)">
-                  <mat-icon>menu_book</mat-icon>
-                  <span>{{ lesson.title }}</span>
-                </button>
-                <button mat-icon-button type="button" (click)="removeLesson(lesson)" [attr.aria-label]="'common.delete' | t">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </div>
-            } @empty {
-              <p class="muted">{{ "courses.noLessons" | t }}</p>
-            }
-          </div>
-
-          <form class="lesson-form" [formGroup]="lessonForm" (ngSubmit)="createLesson()">
-            <mat-form-field appearance="outline">
-              <mat-label>{{ "courses.lessonName" | t }}</mat-label>
-              <input matInput formControlName="title" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>{{ "courses.lessonContent" | t }}</mat-label>
-              <textarea matInput rows="3" formControlName="content"></textarea>
-            </mat-form-field>
-            <button mat-flat-button type="submit"><mat-icon>add</mat-icon>{{ "courses.addLesson" | t }}</button>
-          </form>
-
-          @if (selectedLesson(); as lesson) {
-            <div class="lesson-detail">
-              <div class="panel-title">
-                <h3>{{ lesson.title }}</h3>
-                <span class="pill">{{ sections().length }} {{ "courses.sections" | t }}</span>
-              </div>
-              @if (lesson.content) {
-                <p class="lesson-content">{{ lesson.content }}</p>
-              }
-
-              <div class="section-list">
-                @for (section of sections(); track section.id) {
-                  <article class="section-row">
-                    <div class="section-head">
-                      <span class="pill">{{ sectionTypeLabel(section.type) }}</span>
-                      <strong>{{ section.title }}</strong>
-                      <span class="spacer"></span>
-                      <button mat-icon-button type="button" (click)="editSection(section)" [attr.aria-label]="'common.edit' | t">
-                        <mat-icon>edit</mat-icon>
-                      </button>
-                      <button mat-icon-button type="button" (click)="removeSection(section)" [attr.aria-label]="'common.delete' | t">
-                        <mat-icon>delete</mat-icon>
-                      </button>
-                    </div>
-                    @if (section.content) { <p class="section-content">{{ section.content }}</p> }
-                  </article>
-                } @empty {
-                  <p class="muted">{{ "courses.noSections" | t }}</p>
-                }
-              </div>
-
-              <mat-card appearance="outlined" class="section-form-card">
-                <mat-card-content>
-                  <h3>{{ (editingSectionId() ? "courses.editSection" : "courses.addSection") | t }}</h3>
-                  <form [formGroup]="sectionForm" (ngSubmit)="saveSection()">
-                    <div class="row">
-                      <mat-form-field appearance="outline">
-                        <mat-label>{{ "courses.sectionType" | t }}</mat-label>
-                        <mat-select formControlName="type">
-                          @for (type of sectionTypes; track type.value) {
-                            <mat-option [value]="type.value">{{ type.label | t }}</mat-option>
-                          }
-                        </mat-select>
-                      </mat-form-field>
-                      <mat-form-field appearance="outline" class="grow">
-                        <mat-label>{{ "courses.sectionTitle" | t }}</mat-label>
-                        <input matInput formControlName="title" />
-                      </mat-form-field>
-                    </div>
-                    <mat-form-field appearance="outline">
-                      <mat-label>{{ "courses.sectionContent" | t }}</mat-label>
-                      <textarea matInput rows="5" formControlName="content"></textarea>
-                    </mat-form-field>
-                    <div class="row">
-                      @if (editingSectionId()) {
-                        <button mat-button type="button" (click)="cancelSectionEdit()">{{ "common.cancel" | t }}</button>
-                      }
-                      <button mat-flat-button type="submit">{{ "common.save" | t }}</button>
-                    </div>
-                  </form>
-                </mat-card-content>
-              </mat-card>
-            </div>
-          }
-        }
-      } @else {
-        <div class="empty-card">
-          <mat-icon>school</mat-icon>
-          <p>{{ "courses.select" | t }}</p>
-        </div>
-      }
-    </section>
+      </article>
+    } @empty {
+      <div class="empty-card">
+        <mat-icon>school</mat-icon>
+        <p>{{ "courses.empty" | t }}</p>
+        <button mat-flat-button type="button" (click)="openNew()">{{ "courses.new" | t }}</button>
+      </div>
+    }
   </div>
 </div>

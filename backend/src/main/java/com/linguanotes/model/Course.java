@@ -33,6 +33,9 @@ public class Course {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(columnDefinition = "LONGTEXT")
+    private String content;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
     private CourseStatus status = CourseStatus.DRAFT;

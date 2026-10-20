@@ -7,7 +7,10 @@ export interface Course {
   languageName: string;
   level: string | null;
   description: string | null;
+  content: string | null;
   status: CourseStatus;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Unit {

@@ -129,6 +129,7 @@ public class CourseService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Langue introuvable")));
         course.setLevel(request.level() == null || request.level().isBlank() ? null : request.level().trim());
         course.setDescription(request.description());
+        course.setContent(request.content());
         course.setStatus(request.status() == null ? CourseStatus.DRAFT : request.status());
     }
 
@@ -147,8 +148,8 @@ public class CourseService {
 
     private CourseResponse map(Course course) {
         return new CourseResponse(course.getId(), course.getTitle(), course.getLanguage().getId(),
-                course.getLanguage().getName(), course.getLevel(), course.getDescription(), course.getStatus(),
-                course.getCreatedAt(), course.getUpdatedAt());
+                course.getLanguage().getName(), course.getLevel(), course.getDescription(),
+                course.getContent(), course.getStatus(), course.getCreatedAt(), course.getUpdatedAt());
     }
 
     private UnitResponse map(Unit unit) {

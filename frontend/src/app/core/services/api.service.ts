@@ -63,6 +63,7 @@ export class ApiService {
     languageId: number;
     level: string | null;
     description: string | null;
+    content: string | null;
     status?: Course["status"];
   }) {
     return this.http.post<Course>(`${this.b}/courses`, body);
@@ -74,6 +75,7 @@ export class ApiService {
       languageId: number;
       level: string | null;
       description: string | null;
+      content: string | null;
       status: Course["status"];
     },
   ) {

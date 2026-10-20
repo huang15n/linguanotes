@@ -77,7 +77,7 @@ public class ImportService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choisissez un cours ou renseignez son titre et sa langue");
             }
             course = courses.createCourse(ownerId, new CourseRequest(request.courseTitle(), request.languageId(), null,
-                    "Cours créé pendant l’importation", CourseStatus.DRAFT));
+                    "Cours créé pendant l’importation", null, CourseStatus.DRAFT));
         }
         UnitResponse unit = courses.createUnit(ownerId, course.id(), new UnitRequest(request.unitTitle(), 0,
                 "Document importé : " + job.getFile().getOriginalName()));
