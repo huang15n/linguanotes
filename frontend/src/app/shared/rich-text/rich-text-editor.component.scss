@@ -1,0 +1,41 @@
+.rte {
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--mat-sys-surface, #fff);
+}
+.rte.disabled { opacity: 0.65; pointer-events: none; }
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.35rem 0.45rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  background: color-mix(in srgb, currentColor 3%, transparent);
+}
+.sep { width: 1px; height: 1.4rem; background: color-mix(in srgb, currentColor 14%, transparent); margin: 0 0.2rem; }
+.h { min-width: 0; padding: 0 0.4rem; font-weight: 700; }
+.surface {
+  min-height: 280px;
+  max-height: 640px;
+  overflow: auto;
+  padding: 1rem 1.1rem;
+  outline: none;
+  line-height: 1.55;
+}
+.surface:empty:before {
+  content: attr(data-placeholder);
+  opacity: 0.45;
+  pointer-events: none;
+}
+.surface :is(h1, h2, h3) { margin: 0.6em 0 0.35em; }
+.surface p { margin: 0.4em 0; }
+.surface ul, .surface ol { padding-left: 1.4rem; }
+.surface img { max-width: 100%; height: auto; border-radius: 8px; }
+.surface blockquote {
+  margin: 0.6em 0;
+  padding: 0.2em 0.8em;
+  border-left: 3px solid color-mix(in srgb, currentColor 25%, transparent);
+  opacity: 0.9;
+}

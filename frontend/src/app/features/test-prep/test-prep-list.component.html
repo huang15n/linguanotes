@@ -51,7 +51,16 @@
         }
       </mat-select>
     </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "testPrep.publicationStatus" | t }}</mat-label>
+      <mat-select formControlName="status">
+        <mat-option [value]="null">{{ "common.all" | t }}</mat-option>
+        <mat-option value="PUBLISHED">{{ "testPrep.status.published" | t }}</mat-option>
+        <mat-option value="DRAFT">{{ "testPrep.status.draft" | t }}</mat-option>
+      </mat-select>
+    </mat-form-field>
     <mat-slide-toggle formControlName="favorite">{{ "common.favorites" | t }}</mat-slide-toggle>
+    <mat-slide-toggle formControlName="mineOnly">{{ "testPrep.mineOnly" | t }}</mat-slide-toggle>
   </form>
 
   @if (loading()) {
@@ -75,6 +84,9 @@
         <mat-card-content>
           <mat-chip-set>
             <mat-chip>{{ moduleLabel(item.skillModule) }}</mat-chip>
+            <mat-chip [class.draft]="item.publicationStatus === 'DRAFT'">
+              {{ item.publicationStatus === 'DRAFT' ? ("testPrep.status.draft" | t) : ("testPrep.status.published" | t) }}
+            </mat-chip>
           </mat-chip-set>
         </mat-card-content>
         <mat-card-actions align="end">

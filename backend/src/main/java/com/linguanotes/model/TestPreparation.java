@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 /**
  * Contenu de préparation à un examen officiel (IELTS, TCF, TEF, DELF, DELE).
- * Entité séparée de {@link Note} : mêmes idées (titre, contenu Markdown, favori,
+ * Entité séparée de {@link Note} : mêmes idées (titre, contenu HTML (WYSIWYG), favori,
  * version / autosave) mais métadonnées spécifiques aux examens.
  * Les fichiers audio (listening / speaking) pourront être liés plus tard
  * via {@link StoredFile} ou une relation dédiée.
@@ -36,8 +36,13 @@ public class TestPreparation {
     @Column(nullable = false, length = 255)
     private String title;
 
+    /** Contenu HTML (éditeur WYSIWYG, pas Markdown). */
     @Column(columnDefinition = "TEXT")
     private String content;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "publication_status", nullable = false, length = 20)
+    private PublicationStatus publicationStatus = PublicationStatus.DRAFT;
 
     /** Langue de l'examen (EN / FR / ES), indépendante de languages. */
     @Enumerated(EnumType.STRING)

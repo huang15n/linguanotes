@@ -4,25 +4,22 @@
       <a mat-button routerLink="/test-prep"><mat-icon>arrow_back</mat-icon> {{ "common.back" | t }}</a>
       <div class="title-row">
         <h1>{{ p.title }}</h1>
-        <a mat-stroked-button [routerLink]="['/test-prep', p.id, 'edit']">{{ "common.edit" | t }}</a>
+        @if (p.owned) {
+          <a mat-stroked-button [routerLink]="['/test-prep', p.id, 'edit']">{{ "common.edit" | t }}</a>
+        }
       </div>
       <p class="meta">
         {{ langLabel(p.examLanguage) }} · {{ p.examType }} · {{ p.examLevel }}
       </p>
       <mat-chip-set>
         <mat-chip>{{ moduleLabel(p.skillModule) }}</mat-chip>
+        <mat-chip [class.draft]="p.publicationStatus === 'DRAFT'">{{ statusLabel(p.publicationStatus) }}</mat-chip>
         @if (p.favorite) {
           <mat-chip>{{ "common.favorite" | t }}</mat-chip>
         }
       </mat-chip-set>
     </header>
-    <article class="content md">
-      @if (p.content) {
-        <div [innerHTML]="p.content | markdown"></div>
-      } @else {
-        <span class="empty">{{ "markdown.empty" | t }}</span>
-      }
-    </article>
+    <article class="content rich" [innerHTML]="safeContent(p.content)"></article>
     @if (p.audioFileName) {
       <p class="audio">{{ "testPrep.audio" | t }}: {{ p.audioFileName }}</p>
     }

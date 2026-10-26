@@ -498,6 +498,8 @@ export class ApiService {
     if (f.examLevel) p = p.set("examLevel", f.examLevel);
     if (f.skillModule) p = p.set("skillModule", f.skillModule);
     if (f.favorite != null) p = p.set("favorite", String(f.favorite));
+    if (f.status) p = p.set("status", f.status);
+    if (f.mineOnly) p = p.set("mineOnly", "true");
     return this.http.get<TestPreparation[]>(`${this.b}/test-preparations`, { params: p });
   }
   testPreparation(id: number) {

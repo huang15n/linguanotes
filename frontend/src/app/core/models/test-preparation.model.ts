@@ -3,6 +3,7 @@ import type { NoteVisibility } from "./note.model";
 export type ExamLanguage = "ENGLISH" | "FRENCH" | "SPANISH";
 export type ExamType = "IELTS" | "TCF" | "TEF" | "DELF" | "DELE";
 export type ExamSkillModule = "LISTENING" | "SPEAKING" | "READING" | "WRITING";
+export type PublicationStatus = "DRAFT" | "PUBLISHED";
 
 export const EXAM_LANGUAGES: { value: ExamLanguage; labelKey: string }[] = [
   { value: "ENGLISH", labelKey: "testPrep.lang.english" },
@@ -39,7 +40,7 @@ export interface TestPreparation {
   examType: ExamType;
   examLevel: string;
   skillModule: ExamSkillModule;
-  visibility: NoteVisibility;
+  publicationStatus: PublicationStatus;
   favorite: boolean;
   version: number;
   lastSavedAt: string | null;
@@ -49,6 +50,7 @@ export interface TestPreparation {
   authorName: string;
   audioFileId: number | null;
   audioFileName: string | null;
+  owned: boolean;
 }
 
 export interface TestPreparationRequest {
@@ -58,7 +60,7 @@ export interface TestPreparationRequest {
   examType: ExamType;
   examLevel: string;
   skillModule: ExamSkillModule;
-  visibility: NoteVisibility;
+  publicationStatus: PublicationStatus;
   favorite: boolean;
   audioFileId: number | null;
 }
@@ -70,4 +72,6 @@ export interface TestPreparationFilters {
   examLevel?: string | null;
   skillModule?: ExamSkillModule | null;
   favorite?: boolean | null;
+  status?: PublicationStatus | null;
+  mineOnly?: boolean | null;
 }

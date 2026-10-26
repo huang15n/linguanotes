@@ -4,7 +4,7 @@
     <h1>{{ editId() ? ("testPrep.edit" | t) : ("testPrep.create" | t) }}</h1>
   </header>
 
-  <form class="form" [formGroup]="form" (ngSubmit)="save()">
+  <form class="form" [formGroup]="form" (ngSubmit)="$event.preventDefault()">
     <mat-form-field appearance="outline" class="full">
       <mat-label>{{ "testPrep.fieldTitle" | t }}</mat-label>
       <input matInput formControlName="title" />
@@ -48,28 +48,27 @@
     <div class="editor-block">
       <div class="editor-label">
         <span>{{ "testPrep.content" | t }}</span>
-        <span class="muted">{{ "note.markdownHint" | t }} · {{ "testPrep.tableHint" | t }}</span>
+        <span class="muted">{{ "testPrep.wysiwygHint" | t }}</span>
       </div>
-      <app-markdown-editor formControlName="content" [tableTemplate]="examTableTemplate" />
+      <app-rich-text-editor formControlName="content" />
     </div>
 
     <div class="row actions-row">
-      <mat-form-field appearance="outline">
-        <mat-label>{{ "testPrep.visibility" | t }}</mat-label>
-        <mat-select formControlName="visibility">
-          <mat-option value="PRIVATE">{{ "testPrep.visibility.private" | t }}</mat-option>
-          <mat-option value="PUBLIC">{{ "testPrep.visibility.public" | t }}</mat-option>
-        </mat-select>
-      </mat-form-field>
       <mat-slide-toggle formControlName="favorite">{{ "common.favorite" | t }}</mat-slide-toggle>
     </div>
 
     <p class="hint">{{ "testPrep.audioLater" | t }}</p>
+    <p class="hint">{{ "testPrep.publishRules" | t }}</p>
 
     <div class="actions">
       <a mat-button routerLink="/test-prep">{{ "common.cancel" | t }}</a>
-      <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
-        {{ "common.save" | t }}
+      <button mat-stroked-button type="button" [disabled]="saving()" (click)="saveAs('DRAFT')">
+        <mat-icon>save</mat-icon>
+        {{ "testPrep.saveDraft" | t }}
+      </button>
+      <button mat-flat-button color="primary" type="button" [disabled]="saving()" (click)="saveAs('PUBLISHED')">
+        <mat-icon>publish</mat-icon>
+        {{ "testPrep.publish" | t }}
       </button>
     </div>
   </form>

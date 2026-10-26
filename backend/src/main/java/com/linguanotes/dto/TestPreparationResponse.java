@@ -3,7 +3,7 @@ package com.linguanotes.dto;
 import com.linguanotes.model.ExamLanguage;
 import com.linguanotes.model.ExamSkillModule;
 import com.linguanotes.model.ExamType;
-import com.linguanotes.model.NoteVisibility;
+import com.linguanotes.model.PublicationStatus;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +15,7 @@ public record TestPreparationResponse(
         ExamType examType,
         String examLevel,
         ExamSkillModule skillModule,
-        NoteVisibility visibility,
+        PublicationStatus publicationStatus,
         boolean favorite,
         int version,
         LocalDateTime lastSavedAt,
@@ -24,5 +24,6 @@ public record TestPreparationResponse(
         Long authorId,
         String authorName,
         Long audioFileId,
-        String audioFileName
+        String audioFileName,
+        boolean owned
 ) { }

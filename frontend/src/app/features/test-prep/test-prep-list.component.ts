@@ -69,6 +69,8 @@ export class TestPrepListComponent {
     examLevel: new FormControl<string | null>(null),
     skillModule: new FormControl<string | null>(null),
     favorite: new FormControl(false),
+    status: new FormControl<string | null>(null),
+    mineOnly: new FormControl(false),
   });
 
   typesForLang = signal<ExamType[]>([]);
@@ -101,6 +103,8 @@ export class TestPrepListComponent {
               examLevel: v.examLevel || null,
               skillModule: (v.skillModule as any) || null,
               favorite: v.favorite || null,
+              status: (v.status as any) || null,
+              mineOnly: v.mineOnly || null,
             })
             .pipe(catchError(() => of([] as TestPreparation[]))),
         ),

@@ -16,6 +16,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -44,17 +45,21 @@ public class TestPreparationService {
     }
 
     @Transactional(readOnly = true)
-    public List<TestPreparationResponse> search(Long ownerId,
+    public List<TestPreparationResponse> search(Long viewerId,
+                                                boolean isAdmin,
                                                 String q,
                                                 ExamLanguage examLanguage,
                                                 ExamType examType,
                                                 String examLevel,
                                                 ExamSkillModule skillModule,
-                                                Boolean favorite) {
+                                                Boolean favorite,
+                                                PublicationStatus status,
+                                                boolean mineOnly) {
         String query = (q == null || q.isBlank()) ? null : q.trim();
-        return repository.search(ownerId, query, examLanguage, examType, examLevel, skillModule, favorite)
+        return repository.searchVisible(viewerId, isAdmin, query, examLanguage, examType, examLevel,
+                        skillModule, favorite, status, mineOnly)
                 .stream()
-                .map(this::toResponse)
+                .map(t -> toResponse(t, viewerId))
                 .toList();
     }
 
@@ -62,16 +67,15 @@ public class TestPreparationService {
     public List<TestPreparationResponse> recentOwned(Long ownerId, int limit) {
         return repository.findTop5ByOwnerIdOrderByUpdatedAtDesc(ownerId).stream()
                 .limit(limit)
-                .map(this::toResponse)
+                .map(t -> toResponse(t, ownerId))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public Map<String, Long> countByModule(Long ownerId) {
-        return repository.search(ownerId, null, null, null, null, null, null).stream()
-                .collect(java.util.stream.Collectors.groupingBy(
-                        t -> t.getSkillModule().name(),
-                        java.util.stream.Collectors.counting()));
+        return repository.searchVisible(ownerId, false, null, null, null, null, null, null, null, true)
+                .stream()
+                .collect(Collectors.groupingBy(t -> t.getSkillModule().name(), Collectors.counting()));
     }
 
     @Transactional(readOnly = true)
@@ -85,8 +89,11 @@ public class TestPreparationService {
     }
 
     @Transactional(readOnly = true)
-    public TestPreparationResponse get(Long id, Long ownerId) {
-        return toResponse(requireOwned(id, ownerId));
+    public TestPreparationResponse get(Long id, Long viewerId, boolean isAdmin) {
+        TestPreparation entity = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Préparation introuvable"));
+        assertCanView(entity, viewerId, isAdmin);
+        return toResponse(entity, viewerId);
     }
 
     public TestPreparationResponse create(TestPreparationRequest request, Long ownerId) {
@@ -97,28 +104,28 @@ public class TestPreparationService {
         TestPreparation entity = new TestPreparation();
         entity.setOwner(owner);
         applyRequest(entity, request);
-        return toResponse(repository.save(entity));
+        return toResponse(repository.save(entity), ownerId);
     }
 
-    public TestPreparationResponse update(Long id, TestPreparationRequest request, Long ownerId) {
+    public TestPreparationResponse update(Long id, TestPreparationRequest request, Long ownerId, boolean isAdmin) {
         validateExamMetadata(request.examLanguage(), request.examType(), request.examLevel());
-        TestPreparation entity = requireOwned(id, ownerId);
+        TestPreparation entity = requireEditable(id, ownerId, isAdmin);
         applyRequest(entity, request);
-        return toResponse(repository.save(entity));
+        return toResponse(repository.save(entity), ownerId);
     }
 
-    public TestPreparationResponse autosave(Long id, TestPreparationAutosaveRequest request, Long ownerId) {
-        TestPreparation entity = requireOwned(id, ownerId);
+    public TestPreparationResponse autosave(Long id, TestPreparationAutosaveRequest request, Long ownerId, boolean isAdmin) {
+        TestPreparation entity = requireEditable(id, ownerId, isAdmin);
         if (entity.getVersion() != request.version()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Version conflict: the preparation was modified elsewhere");
         }
         entity.setContent(request.content());
-        return toResponse(repository.save(entity));
+        return toResponse(repository.save(entity), ownerId);
     }
 
-    public void delete(Long id, Long ownerId) {
-        TestPreparation entity = requireOwned(id, ownerId);
+    public void delete(Long id, Long ownerId, boolean isAdmin) {
+        TestPreparation entity = requireEditable(id, ownerId, isAdmin);
         repository.delete(entity);
     }
 
@@ -129,7 +136,12 @@ public class TestPreparationService {
         entity.setExamType(request.examType());
         entity.setExamLevel(normalizeLevel(request.examType(), request.examLevel()));
         entity.setSkillModule(request.skillModule());
-        entity.setVisibility(request.visibility() != null ? request.visibility() : NoteVisibility.PRIVATE);
+        entity.setPublicationStatus(
+                request.publicationStatus() != null ? request.publicationStatus() : PublicationStatus.DRAFT);
+        // visibility privée par défaut (héritage historique) — non exposée au flux publish
+        if (entity.getVisibility() == null) {
+            entity.setVisibility(NoteVisibility.PRIVATE);
+        }
         if (request.favorite() != null) {
             entity.setFavorite(request.favorite());
         }
@@ -171,13 +183,30 @@ public class TestPreparationService {
         return raw;
     }
 
-    private TestPreparation requireOwned(Long id, Long ownerId) {
-        return repository.findByIdAndOwnerId(id, ownerId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Préparation introuvable"));
+    private void assertCanView(TestPreparation entity, Long viewerId, boolean isAdmin) {
+        if (entity.getPublicationStatus() == PublicationStatus.PUBLISHED) {
+            return;
+        }
+        if (isAdmin || entity.getOwner().getId().equals(viewerId)) {
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Préparation introuvable");
     }
 
-    private TestPreparationResponse toResponse(TestPreparation t) {
+    private TestPreparation requireEditable(Long id, Long ownerId, boolean isAdmin) {
+        TestPreparation entity = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Préparation introuvable"));
+        if (!isAdmin && !entity.getOwner().getId().equals(ownerId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Modification non autorisée");
+        }
+        return entity;
+    }
+
+    private TestPreparationResponse toResponse(TestPreparation t, Long viewerId) {
         StoredFile audio = t.getAudioFile();
+        String authorName = t.getOwner().getDisplayName() != null && !t.getOwner().getDisplayName().isBlank()
+                ? t.getOwner().getDisplayName()
+                : t.getOwner().getName();
         return new TestPreparationResponse(
                 t.getId(),
                 t.getTitle(),
@@ -186,16 +215,17 @@ public class TestPreparationService {
                 t.getExamType(),
                 t.getExamLevel(),
                 t.getSkillModule(),
-                t.getVisibility(),
+                t.getPublicationStatus(),
                 t.isFavorite(),
                 t.getVersion(),
                 t.getLastSavedAt(),
                 t.getCreatedAt(),
                 t.getUpdatedAt(),
                 t.getOwner().getId(),
-                t.getOwner().getDisplayName() != null && !t.getOwner().getDisplayName().isBlank() ? t.getOwner().getDisplayName() : t.getOwner().getName(),
+                authorName,
                 audio != null ? audio.getId() : null,
-                audio != null ? audio.getOriginalName() : null
+                audio != null ? audio.getOriginalName() : null,
+                viewerId != null && viewerId.equals(t.getOwner().getId())
         );
     }
 }

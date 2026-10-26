@@ -3,13 +3,13 @@ import { ActivatedRoute, RouterLink } from "@angular/router";
 import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
 import { MatChipsModule } from "@angular/material/chips";
+import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { ApiService } from "../../core/services/api.service";
 import { LocaleService, TranslatePipe } from "../../core/services/locale.service";
 import { TestPreparation } from "../../core/models";
-import { MarkdownPipe } from "../../shared/markdown/markdown.pipe";
 
 @Component({
-  imports: [RouterLink, MatButtonModule, MatIconModule, MatChipsModule, TranslatePipe, MarkdownPipe],
+  imports: [RouterLink, MatButtonModule, MatIconModule, MatChipsModule, TranslatePipe],
   styleUrl: "./test-prep-detail.component.scss",
   templateUrl: "./test-prep-detail.component.html",
 })
@@ -17,6 +17,7 @@ export class TestPrepDetailComponent implements OnInit {
   private api = inject(ApiService);
   private route = inject(ActivatedRoute);
   private locale = inject(LocaleService);
+  private sanitizer = inject(DomSanitizer);
   item = signal<TestPreparation | null>(null);
 
   ngOnInit() {
@@ -31,5 +32,11 @@ export class TestPrepDetailComponent implements OnInit {
   }
   langLabel(l: string) {
     return this.locale.translate(`testPrep.lang.${l.toLowerCase()}`);
+  }
+  statusLabel(s: string) {
+    return this.locale.translate(`testPrep.status.${s.toLowerCase()}`);
+  }
+  safeContent(html: string | null): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(html ?? "");
   }
 }

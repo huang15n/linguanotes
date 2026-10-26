@@ -3,9 +3,11 @@ package com.linguanotes.controller;
 import com.linguanotes.dto.TestPreparationAutosaveRequest;
 import com.linguanotes.dto.TestPreparationRequest;
 import com.linguanotes.dto.TestPreparationResponse;
+import com.linguanotes.model.AccountRole;
 import com.linguanotes.model.ExamLanguage;
 import com.linguanotes.model.ExamSkillModule;
 import com.linguanotes.model.ExamType;
+import com.linguanotes.model.PublicationStatus;
 import com.linguanotes.security.AccountPrincipal;
 import com.linguanotes.service.TestPreparationService;
 import jakarta.validation.Valid;
@@ -26,6 +28,10 @@ public class TestPreparationController {
         this.service = service;
     }
 
+    private static boolean isAdmin(AccountPrincipal principal) {
+        return principal.role() == AccountRole.ADMIN;
+    }
+
     @GetMapping
     public List<TestPreparationResponse> search(
             @AuthenticationPrincipal AccountPrincipal principal,
@@ -34,14 +40,17 @@ public class TestPreparationController {
             @RequestParam(required = false) ExamType examType,
             @RequestParam(required = false) String examLevel,
             @RequestParam(required = false) ExamSkillModule skillModule,
-            @RequestParam(required = false) Boolean favorite) {
-        return service.search(principal.id(), q, examLanguage, examType, examLevel, skillModule, favorite);
+            @RequestParam(required = false) Boolean favorite,
+            @RequestParam(required = false) PublicationStatus status,
+            @RequestParam(required = false, defaultValue = "false") boolean mineOnly) {
+        return service.search(principal.id(), isAdmin(principal), q, examLanguage, examType, examLevel,
+                skillModule, favorite, status, mineOnly);
     }
 
     @GetMapping("/{id}")
     public TestPreparationResponse get(@PathVariable Long id,
                                        @AuthenticationPrincipal AccountPrincipal principal) {
-        return service.get(id, principal.id());
+        return service.get(id, principal.id(), isAdmin(principal));
     }
 
     @PostMapping
@@ -56,7 +65,7 @@ public class TestPreparationController {
             @PathVariable Long id,
             @Valid @RequestBody TestPreparationRequest request,
             @AuthenticationPrincipal AccountPrincipal principal) {
-        return service.update(id, request, principal.id());
+        return service.update(id, request, principal.id(), isAdmin(principal));
     }
 
     @PatchMapping("/{id}/autosave")
@@ -64,13 +73,13 @@ public class TestPreparationController {
             @PathVariable Long id,
             @Valid @RequestBody TestPreparationAutosaveRequest request,
             @AuthenticationPrincipal AccountPrincipal principal) {
-        return service.autosave(id, request, principal.id());
+        return service.autosave(id, request, principal.id(), isAdmin(principal));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id,
                        @AuthenticationPrincipal AccountPrincipal principal) {
-        service.delete(id, principal.id());
+        service.delete(id, principal.id(), isAdmin(principal));
     }
 }

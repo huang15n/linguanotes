@@ -3,7 +3,7 @@ package com.linguanotes.dto;
 import com.linguanotes.model.ExamLanguage;
 import com.linguanotes.model.ExamSkillModule;
 import com.linguanotes.model.ExamType;
-import com.linguanotes.model.NoteVisibility;
+import com.linguanotes.model.PublicationStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -15,7 +15,7 @@ public record TestPreparationRequest(
         @NotNull ExamType examType,
         @NotBlank @Size(max = 30) String examLevel,
         @NotNull ExamSkillModule skillModule,
-        NoteVisibility visibility,
+        @NotNull PublicationStatus publicationStatus,
         Boolean favorite,
         Long audioFileId
 ) { }

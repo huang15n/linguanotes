@@ -10,7 +10,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { ApiService } from "../../core/services/api.service";
 import { LocaleService, TranslatePipe } from "../../core/services/locale.service";
 import { UiService } from "../../shared/dialogs/dialogs";
-import { MarkdownEditorComponent } from "../../shared/markdown/markdown-editor.component";
+import { RichTextEditorComponent } from "../../shared/rich-text/rich-text-editor.component";
 import {
   EXAM_LANGUAGES,
   EXAM_LEVELS_BY_TYPE,
@@ -18,6 +18,7 @@ import {
   EXAM_TYPES_BY_LANGUAGE,
   ExamLanguage,
   ExamType,
+  PublicationStatus,
   TestPreparationRequest,
 } from "../../core/models";
 
@@ -32,16 +33,12 @@ import {
     MatSlideToggleModule,
     MatIconModule,
     TranslatePipe,
-    MarkdownEditorComponent,
+    RichTextEditorComponent,
   ],
   styleUrl: "./test-prep-form.component.scss",
   templateUrl: "./test-prep-form.component.html",
 })
 export class TestPrepFormComponent implements OnInit {
-  /** Tableaux adaptés à la préparation d'examen (pas le modèle vocabulaire des notes). */
-  examTableTemplate =
-    "\n| N° | Consignes / Question | Réponse attendue | Points | Notes |\n| --- | --- | --- | --- | --- |\n| 1 |  |  |  |  |\n";
-
   private api = inject(ApiService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -62,7 +59,6 @@ export class TestPrepFormComponent implements OnInit {
     examType: new FormControl<ExamType | null>(null, Validators.required),
     examLevel: new FormControl<string | null>(null, Validators.required),
     skillModule: new FormControl<string | null>(null, Validators.required),
-    visibility: new FormControl<"PRIVATE" | "PUBLIC">("PRIVATE", { nonNullable: true }),
     favorite: new FormControl(false, { nonNullable: true }),
   });
 
@@ -101,7 +97,6 @@ export class TestPrepFormComponent implements OnInit {
             examType: item.examType,
             examLevel: item.examLevel,
             skillModule: item.skillModule,
-            visibility: item.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE",
             favorite: item.favorite,
           });
         },
@@ -110,7 +105,7 @@ export class TestPrepFormComponent implements OnInit {
     }
   }
 
-  save() {
+  saveAs(status: PublicationStatus) {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -123,7 +118,7 @@ export class TestPrepFormComponent implements OnInit {
       examType: v.examType!,
       examLevel: v.examLevel!,
       skillModule: v.skillModule as any,
-      visibility: v.visibility,
+      publicationStatus: status,
       favorite: v.favorite,
       audioFileId: null,
     };
@@ -135,6 +130,11 @@ export class TestPrepFormComponent implements OnInit {
     req$.subscribe({
       next: (saved) => {
         this.saving.set(false);
+        this.ui.toast(
+          this.locale.translate(
+            status === "PUBLISHED" ? "testPrep.publishedToast" : "testPrep.draftToast",
+          ),
+        );
         this.router.navigate(["/test-prep", saved.id]);
       },
       error: () => {

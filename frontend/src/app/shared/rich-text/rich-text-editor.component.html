@@ -1,0 +1,42 @@
+<div class="rte" [class.disabled]="disabled()">
+  <div class="bar" (mousedown)="$event.preventDefault()">
+    <button mat-icon-button type="button" [matTooltip]="'rte.bold' | t" [disabled]="disabled()" (click)="cmd('bold')"><mat-icon>format_bold</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'rte.italic' | t" [disabled]="disabled()" (click)="cmd('italic')"><mat-icon>format_italic</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'rte.underline' | t" [disabled]="disabled()" (click)="cmd('underline')"><mat-icon>format_underlined</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'rte.strike' | t" [disabled]="disabled()" (click)="cmd('strikeThrough')"><mat-icon>strikethrough_s</mat-icon></button>
+    <span class="sep"></span>
+    <button mat-button type="button" class="h" [matTooltip]="'rte.h1' | t" [disabled]="disabled()" (click)="heading(1)">H1</button>
+    <button mat-button type="button" class="h" [matTooltip]="'rte.h2' | t" [disabled]="disabled()" (click)="heading(2)">H2</button>
+    <button mat-button type="button" class="h" [matTooltip]="'rte.h3' | t" [disabled]="disabled()" (click)="heading(3)">H3</button>
+    <button mat-icon-button type="button" [matTooltip]="'rte.paragraph' | t" [disabled]="disabled()" (click)="paragraph()"><mat-icon>notes</mat-icon></button>
+    <span class="sep"></span>
+    <button mat-icon-button type="button" [matTooltip]="'rte.ul' | t" [disabled]="disabled()" (click)="cmd('insertUnorderedList')"><mat-icon>format_list_bulleted</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'rte.ol' | t" [disabled]="disabled()" (click)="cmd('insertOrderedList')"><mat-icon>format_list_numbered</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'rte.quote' | t" [disabled]="disabled()" (click)="cmd('formatBlock', 'BLOCKQUOTE')"><mat-icon>format_quote</mat-icon></button>
+    <span class="sep"></span>
+    <button mat-icon-button type="button" [matTooltip]="'rte.alignLeft' | t" [disabled]="disabled()" (click)="cmd('justifyLeft')"><mat-icon>format_align_left</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'rte.alignCenter' | t" [disabled]="disabled()" (click)="cmd('justifyCenter')"><mat-icon>format_align_center</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'rte.alignRight' | t" [disabled]="disabled()" (click)="cmd('justifyRight')"><mat-icon>format_align_right</mat-icon></button>
+    <span class="sep"></span>
+    <button mat-icon-button type="button" [matTooltip]="'rte.link' | t" [disabled]="disabled()" (click)="link()"><mat-icon>link</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'rte.unlink' | t" [disabled]="disabled()" (click)="unlink()"><mat-icon>link_off</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'rte.image' | t" [disabled]="disabled() || imageUploading()" (click)="openImagePicker()">
+      <mat-icon>{{ imageUploading() ? "hourglass_top" : "image" }}</mat-icon>
+    </button>
+    <input #imageInput type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden (change)="uploadImage($event)" />
+    <span class="sep"></span>
+    <button mat-icon-button type="button" [matTooltip]="'rte.undo' | t" [disabled]="disabled()" (click)="cmd('undo')"><mat-icon>undo</mat-icon></button>
+    <button mat-icon-button type="button" [matTooltip]="'rte.redo' | t" [disabled]="disabled()" (click)="cmd('redo')"><mat-icon>redo</mat-icon></button>
+  </div>
+  <div
+    #editor
+    class="surface"
+    contenteditable="true"
+    role="textbox"
+    [attr.aria-disabled]="disabled()"
+    [attr.contenteditable]="!disabled()"
+    (input)="onInput()"
+    (blur)="onTouched()"
+    [attr.data-placeholder]="'rte.placeholder' | t"
+  ></div>
+</div>
