@@ -1,0 +1,76 @@
+<section class="page">
+  <header class="page-header">
+    <a mat-button routerLink="/test-prep"><mat-icon>arrow_back</mat-icon> {{ "common.back" | t }}</a>
+    <h1>{{ editId() ? ("testPrep.edit" | t) : ("testPrep.create" | t) }}</h1>
+  </header>
+
+  <form class="form" [formGroup]="form" (ngSubmit)="save()">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>{{ "testPrep.fieldTitle" | t }}</mat-label>
+      <input matInput formControlName="title" />
+    </mat-form-field>
+
+    <div class="row">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ "testPrep.examLanguage" | t }}</mat-label>
+        <mat-select formControlName="examLanguage">
+          @for (l of languages; track l.value) {
+            <mat-option [value]="l.value">{{ l.labelKey | t }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ "testPrep.examType" | t }}</mat-label>
+        <mat-select formControlName="examType">
+          @for (ty of typesForLang(); track ty) {
+            <mat-option [value]="ty">{{ ty }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ "testPrep.examLevel" | t }}</mat-label>
+        <mat-select formControlName="examLevel">
+          @for (lv of levelsForType(); track lv) {
+            <mat-option [value]="lv">{{ lv }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ "testPrep.skillModule" | t }}</mat-label>
+        <mat-select formControlName="skillModule">
+          @for (m of modules; track m.value) {
+            <mat-option [value]="m.value">{{ m.labelKey | t }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="editor-block">
+      <div class="editor-label">
+        <span>{{ "testPrep.content" | t }}</span>
+        <span class="muted">{{ "note.markdownHint" | t }} · {{ "testPrep.tableHint" | t }}</span>
+      </div>
+      <app-markdown-editor formControlName="content" [tableTemplate]="examTableTemplate" />
+    </div>
+
+    <div class="row actions-row">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ "testPrep.visibility" | t }}</mat-label>
+        <mat-select formControlName="visibility">
+          <mat-option value="PRIVATE">{{ "testPrep.visibility.private" | t }}</mat-option>
+          <mat-option value="PUBLIC">{{ "testPrep.visibility.public" | t }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-slide-toggle formControlName="favorite">{{ "common.favorite" | t }}</mat-slide-toggle>
+    </div>
+
+    <p class="hint">{{ "testPrep.audioLater" | t }}</p>
+
+    <div class="actions">
+      <a mat-button routerLink="/test-prep">{{ "common.cancel" | t }}</a>
+      <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+        {{ "common.save" | t }}
+      </button>
+    </div>
+  </form>
+</section>

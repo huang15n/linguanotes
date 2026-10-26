@@ -1,0 +1,91 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>{{ "testPrep.title" | t }}</h1>
+      <p class="subtitle">{{ "testPrep.subtitle" | t }}</p>
+    </div>
+    <a mat-flat-button color="primary" routerLink="/test-prep/new">
+      <mat-icon>add</mat-icon>
+      {{ "testPrep.create" | t }}
+    </a>
+  </header>
+
+  <form class="filters" [formGroup]="form">
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "common.search" | t }}</mat-label>
+      <input matInput formControlName="q" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "testPrep.examLanguage" | t }}</mat-label>
+      <mat-select formControlName="examLanguage">
+        <mat-option [value]="null">{{ "common.all" | t }}</mat-option>
+        @for (l of languages; track l.value) {
+          <mat-option [value]="l.value">{{ l.labelKey | t }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "testPrep.examType" | t }}</mat-label>
+      <mat-select formControlName="examType">
+        <mat-option [value]="null">{{ "common.all" | t }}</mat-option>
+        @for (ty of typesForLang(); track ty) {
+          <mat-option [value]="ty">{{ ty }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "testPrep.examLevel" | t }}</mat-label>
+      <mat-select formControlName="examLevel">
+        <mat-option [value]="null">{{ "common.all" | t }}</mat-option>
+        @for (lv of levelsForType(); track lv) {
+          <mat-option [value]="lv">{{ lv }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ "testPrep.skillModule" | t }}</mat-label>
+      <mat-select formControlName="skillModule">
+        <mat-option [value]="null">{{ "common.all" | t }}</mat-option>
+        @for (m of modules; track m.value) {
+          <mat-option [value]="m.value">{{ m.labelKey | t }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-slide-toggle formControlName="favorite">{{ "common.favorites" | t }}</mat-slide-toggle>
+  </form>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  <div class="grid">
+    @for (item of items(); track item.id) {
+      <mat-card class="card">
+        <mat-card-header>
+          <mat-card-title>
+            <a [routerLink]="['/test-prep', item.id]">{{ item.title }}</a>
+            @if (item.favorite) {
+              <mat-icon class="fav">star</mat-icon>
+            }
+          </mat-card-title>
+          <mat-card-subtitle>
+            {{ langLabel(item.examLanguage) }} · {{ item.examType }} · {{ item.examLevel }}
+          </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-chip-set>
+            <mat-chip>{{ moduleLabel(item.skillModule) }}</mat-chip>
+          </mat-chip-set>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <a mat-button [routerLink]="['/test-prep', item.id, 'edit']">{{ "common.edit" | t }}</a>
+          <button mat-button color="warn" type="button" (click)="remove(item)">{{ "common.delete" | t }}</button>
+        </mat-card-actions>
+      </mat-card>
+    } @empty {
+      @if (!loading()) {
+        <p class="empty">{{ "testPrep.empty" | t }}</p>
+      }
+    }
+  </div>
+</section>

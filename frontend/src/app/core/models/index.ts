@@ -13,3 +13,4 @@ export * from "./profile.model";
 export * from "./progress.model";
 export * from "./review.model";
 export * from "./vocabulary.model";
+export * from "./test-preparation.model";

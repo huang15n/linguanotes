@@ -23,15 +23,18 @@ public class DashboardService {
     private final VocabularyEntryRepository vocabulary;
     private final ReviewProgressRepository reviews;
     private final ExerciseAttemptRepository attempts;
+    private final TestPreparationService testPreparations;
 
     public DashboardService(NoteService notes, LanguageRepository languages,
                             VocabularyEntryRepository vocabulary, ReviewProgressRepository reviews,
-                            ExerciseAttemptRepository attempts) {
+                            ExerciseAttemptRepository attempts,
+                            TestPreparationService testPreparations) {
         this.notes = notes;
         this.languages = languages;
         this.vocabulary = vocabulary;
         this.reviews = reviews;
         this.attempts = attempts;
+        this.testPreparations = testPreparations;
     }
 
     public DashboardResponse dashboard(Long userId) {
@@ -48,6 +51,11 @@ public class DashboardService {
                 average == null ? BigDecimal.ZERO
                         : BigDecimal.valueOf(average).setScale(2, RoundingMode.HALF_UP),
                 byType,
-                notes.recentOwned(userId, 5));
+                notes.recentOwned(userId, 5),
+                testPreparations.countOwned(userId),
+                testPreparations.countFavorites(userId),
+                testPreparations.countByModule(userId),
+                testPreparations.recentOwned(userId, 5)
+        );
     }
 }

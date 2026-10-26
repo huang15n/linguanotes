@@ -208,3 +208,7 @@
     align-items: flex-start;
   }
 }
+
+.stat-card.violet .stat-icon { background: color-mix(in srgb, #7c5cfc 18%, transparent); color: #7c5cfc; }
+.note-card-grid.compact { grid-template-columns: 1fr; gap: 0.6rem; }
+.note-card-grid.compact .note-card h3 { font-size: 1rem; margin: 0.35rem 0 0; }

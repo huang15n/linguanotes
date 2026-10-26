@@ -59,6 +59,39 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "test-prep",
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import("./features/test-prep/test-prep-list.component").then(
+        (m) => m.TestPrepListComponent,
+      ),
+  },
+  {
+    path: "test-prep/new",
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import("./features/test-prep/test-prep-form.component").then(
+        (m) => m.TestPrepFormComponent,
+      ),
+  },
+  {
+    path: "test-prep/:id",
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import("./features/test-prep/test-prep-detail.component").then(
+        (m) => m.TestPrepDetailComponent,
+      ),
+  },
+  {
+    path: "test-prep/:id/edit",
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import("./features/test-prep/test-prep-form.component").then(
+        (m) => m.TestPrepFormComponent,
+      ),
+  },
+
+  {
     path: "languages",
     canActivate: [authGuard],
     loadComponent: () =>

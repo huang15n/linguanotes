@@ -37,6 +37,9 @@ import {
   Unit,
   UserLanguage,
   VocabularyEntry,
+  TestPreparation,
+  TestPreparationRequest,
+  TestPreparationFilters,
 } from "../models";
 
 @Injectable({ providedIn: "root" })
@@ -486,4 +489,31 @@ export class ApiService {
       `${this.b}/notes/${noteId}/comments/${commentId}`,
     );
   }
+
+  testPreparations(f: TestPreparationFilters = {}) {
+    let p = new HttpParams();
+    if (f.q) p = p.set("q", f.q);
+    if (f.examLanguage) p = p.set("examLanguage", f.examLanguage);
+    if (f.examType) p = p.set("examType", f.examType);
+    if (f.examLevel) p = p.set("examLevel", f.examLevel);
+    if (f.skillModule) p = p.set("skillModule", f.skillModule);
+    if (f.favorite != null) p = p.set("favorite", String(f.favorite));
+    return this.http.get<TestPreparation[]>(`${this.b}/test-preparations`, { params: p });
+  }
+  testPreparation(id: number) {
+    return this.http.get<TestPreparation>(`${this.b}/test-preparations/${id}`);
+  }
+  createTestPreparation(body: TestPreparationRequest) {
+    return this.http.post<TestPreparation>(`${this.b}/test-preparations`, body);
+  }
+  updateTestPreparation(id: number, body: TestPreparationRequest) {
+    return this.http.put<TestPreparation>(`${this.b}/test-preparations/${id}`, body);
+  }
+  autosaveTestPreparation(id: number, body: { content: string; version: number }) {
+    return this.http.patch<TestPreparation>(`${this.b}/test-preparations/${id}/autosave`, body);
+  }
+  deleteTestPreparation(id: number) {
+    return this.http.delete<void>(`${this.b}/test-preparations/${id}`);
+  }
+
 }

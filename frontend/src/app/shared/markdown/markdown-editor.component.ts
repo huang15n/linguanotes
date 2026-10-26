@@ -3,6 +3,7 @@ import {
   ElementRef,
   forwardRef,
   inject,
+  input,
   signal,
   viewChild,
 } from "@angular/core";
@@ -38,6 +39,10 @@ type Mode = "edit" | "split" | "preview";
   templateUrl: "./markdown-editor.component.html",
 })
 export class MarkdownEditorComponent implements ControlValueAccessor {
+  /** Gabarit Markdown du bouton tableau. Notes = vocabulaire ; test-prep = grille d'examen. */
+  tableTemplate = input<string>(
+    "\n| Mot | Traduction | Exemple |\n| --- | --- | --- |\n|  |  |  |\n",
+  );
   private api = inject(ApiService);
   ta = viewChild<ElementRef<HTMLTextAreaElement>>("ta");
   imageInput = viewChild<ElementRef<HTMLInputElement>>("imageInput");
@@ -170,9 +175,7 @@ export class MarkdownEditorComponent implements ControlValueAccessor {
     this.insert("\n\n---\n\n");
   }
   table() {
-    this.insert(
-      "\n| Mot | Traduction | Exemple |\n| --- | --- | --- |\n|  |  |  |\n",
-    );
+    this.insert(this.tableTemplate());
   }
 
   openImagePicker() {

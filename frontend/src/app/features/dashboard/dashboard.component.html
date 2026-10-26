@@ -13,6 +13,10 @@
           <mat-icon>explore</mat-icon>
           {{ "dashboard.explore" | t }}
         </a>
+        <a mat-stroked-button routerLink="/test-prep/new">
+          <mat-icon>quiz</mat-icon>
+          {{ "dashboard.newTestPrep" | t }}
+        </a>
       </div>
     </div>
     <div class="hero-orbit" aria-hidden="true">
@@ -35,6 +39,11 @@
         <span class="stat-icon"><mat-icon>description</mat-icon></span>
         <span class="stat-value">{{ d.totalNotes }}</span>
         <span class="stat-label">{{ "dashboard.notes" | t }}</span>
+      </a>
+      <a class="stat-card violet" routerLink="/test-prep">
+        <span class="stat-icon"><mat-icon>quiz</mat-icon></span>
+        <span class="stat-value">{{ d.testPreparationCount }}</span>
+        <span class="stat-label">{{ "dashboard.testPrep" | t }}</span>
       </a>
       <a class="stat-card" routerLink="/languages">
         <span class="stat-icon"><mat-icon>language</mat-icon></span>
@@ -111,6 +120,59 @@
       </section>
     </div>
 
+    <div class="dashboard-columns">
+      <section class="panel">
+        <div class="section-heading">
+          <h2>{{ "dashboard.testPrepByModule" | t }}</h2>
+          <a mat-button routerLink="/test-prep">{{ "common.viewAll" | t }}</a>
+        </div>
+        @if (moduleRows().length) {
+          <div class="bar-list">
+            @for (row of moduleRows(); track row.value) {
+              <div class="bar-row">
+                <span class="bar-label">{{ row.labelKey | t }}</span>
+                <span class="bar-track">
+                  <span class="bar-fill" [style.width.%]="(row.count / maxModule()) * 100"></span>
+                </span>
+                <span class="bar-count">{{ row.count }}</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="empty-card">
+            <mat-icon>quiz</mat-icon>
+            <p>{{ "dashboard.noTestPrep" | t }}</p>
+            <a mat-flat-button routerLink="/test-prep/new">{{ "dashboard.newTestPrep" | t }}</a>
+          </div>
+        }
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <h2>{{ "dashboard.recentTestPrep" | t }}</h2>
+          <a mat-button routerLink="/test-prep">{{ "common.viewAll" | t }}</a>
+        </div>
+        @if (d.recentTestPreparations.length) {
+          <div class="note-card-grid compact">
+            @for (p of d.recentTestPreparations; track p.id) {
+              <a class="note-card" [routerLink]="['/test-prep', p.id]">
+                <div class="note-meta">
+                  <span class="pill">{{ moduleLabel(p.skillModule) }}</span>
+                  <span>{{ examMeta(p) }}</span>
+                </div>
+                <h3>{{ p.title }}</h3>
+              </a>
+            }
+          </div>
+        } @else {
+          <div class="empty-card">
+            <mat-icon>quiz</mat-icon>
+            <p>{{ "dashboard.noTestPrep" | t }}</p>
+          </div>
+        }
+      </section>
+    </div>
+
     <div class="section-heading">
       <h2>{{ "dashboard.recent" | t }}</h2>
       <a mat-button routerLink="/notes">{{ "dashboard.viewAllNotes" | t }}</a>
@@ -176,6 +238,20 @@
         <div>
           <strong>{{ "dashboard.quickLanguages" | t }}</strong>
           <span>{{ "dashboard.quickLanguagesHint" | t }}</span>
+        </div>
+      </a>
+      <a class="action-card" routerLink="/test-prep">
+        <mat-icon>quiz</mat-icon>
+        <div>
+          <strong>{{ "dashboard.quickTestPrep" | t }}</strong>
+          <span>{{ "dashboard.quickTestPrepHint" | t }}</span>
+        </div>
+      </a>
+      <a class="action-card" routerLink="/test-prep/new">
+        <mat-icon>add_circle</mat-icon>
+        <div>
+          <strong>{{ "dashboard.newTestPrep" | t }}</strong>
+          <span>{{ "dashboard.quickNewTestPrepHint" | t }}</span>
         </div>
       </a>
     </div>

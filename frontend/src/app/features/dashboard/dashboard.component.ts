@@ -9,7 +9,13 @@ import {
   TranslatePipe,
 } from "../../core/services/locale.service";
 import { AuthService } from "../../core/services/auth.service";
-import { Dashboard, NOTE_TYPES, Note } from "../../core/models";
+import {
+  Dashboard,
+  EXAM_SKILL_MODULES,
+  NOTE_TYPES,
+  Note,
+  TestPreparation,
+} from "../../core/models";
 
 @Component({
   imports: [DatePipe, RouterLink, MatButtonModule, MatIconModule, TranslatePipe],
@@ -34,6 +40,16 @@ export class DashboardComponent implements OnInit {
   maxType = computed(() =>
     Math.max(1, ...this.typeRows().map((row) => row.count)),
   );
+  modules = EXAM_SKILL_MODULES;
+  moduleRows = computed(() => {
+    const by = this.data()?.testPrepByModule ?? {};
+    return this.modules
+      .map((m) => ({ ...m, count: by[m.value] ?? 0 }))
+      .filter((row) => row.count > 0);
+  });
+  maxModule = computed(() =>
+    Math.max(1, ...this.moduleRows().map((row) => row.count)),
+  );
 
   ngOnInit() {
     this.api.dashboard().subscribe({
@@ -53,5 +69,14 @@ export class DashboardComponent implements OnInit {
 
   count(type: string) {
     return this.data()?.notesByType[type] ?? 0;
+  }
+
+  moduleLabel(m: string) {
+    return this.locale.translate(`testPrep.module.${m.toLowerCase()}`);
+  }
+
+  examMeta(p: TestPreparation) {
+    const lang = this.locale.translate(`testPrep.lang.${p.examLanguage.toLowerCase()}`);
+    return `${lang} · ${p.examType} · ${p.examLevel}`;
   }
 }

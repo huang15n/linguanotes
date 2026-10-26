@@ -1,4 +1,5 @@
 import { Note } from "./note.model";
+import { TestPreparation } from "./test-preparation.model";
 
 export interface Dashboard {
   totalNotes: number;
@@ -10,4 +11,8 @@ export interface Dashboard {
   averageScore: number;
   notesByType: Partial<Record<string, number>>;
   recent: Note[];
+  testPreparationCount: number;
+  testPreparationFavorites: number;
+  testPrepByModule: Partial<Record<string, number>>;
+  recentTestPreparations: TestPreparation[];
 }

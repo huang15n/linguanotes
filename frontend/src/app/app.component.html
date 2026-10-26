@@ -45,6 +45,10 @@
             <mat-icon matListItemIcon>description</mat-icon>
             <span matListItemTitle>{{ "nav.notes" | t }}</span>
           </a>
+          <a mat-list-item routerLink="/test-prep" routerLinkActive="active" (click)="open.set(false)">
+            <mat-icon matListItemIcon>quiz</mat-icon>
+            <span matListItemTitle>{{ "nav.testPrep" | t }}</span>
+          </a>
           <a mat-list-item routerLink="/languages" routerLinkActive="active" (click)="open.set(false)">
             <mat-icon matListItemIcon>language</mat-icon>
             <span matListItemTitle>{{ "nav.languages" | t }}</span>
